@@ -83,7 +83,11 @@ public class JiraRelease {
 
         }
 
-        calculateMetric(releaseList, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
+        //calculateMetric(releaseList, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
+
+        /*for(int k = 0; k < releaseList.size(); k++){
+            System.out.println(releaseList.get(k));
+        }*/
 
         return releaseList;
     }

@@ -1,15 +1,19 @@
 package jira;
 
+import model.Release;
+import model.Ticket;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 
-import static jira.JiraRelease.releaseNames;
-import static jira.JiraRelease.releases;
+import static jira.JiraRelease.*;
 import static utils.JSON.readJsonFromUrl;
 
 public class JiraTicket {
@@ -18,9 +22,21 @@ public class JiraTicket {
         throw new IllegalStateException("Utility class");
     }
 
-    public static void getTickets(String project) throws IOException {
+    public static List<Ticket> getTickets(String project) throws IOException {
         Integer j = 0, i = 0, total = 1;
-        Integer injectionVersion;
+        Integer injectionVersion = null;
+
+        List<Release> releaseList = getRelease("BOOKKEEPER");
+        List<Ticket> tickets = new ArrayList<>();
+
+        HashMap<Integer, Release> releseIDMap = new HashMap<>();
+
+        //inserisco tutte le release nella mappa e uso come chiave il loro id,
+        //utile per recuperare le AV
+        for(Release relese: releaseList) {
+            releseIDMap.put(relese.getId(), relese);
+        }
+
         //Get JSON API for closed bugs w/ AV in the project
         do {
             //Only gets a max of 1000 at a time, so must do this multiple times if bugs >1000
@@ -40,19 +56,76 @@ public class JiraTicket {
                 JSONObject issue = issues.getJSONObject(i % 1000);
                 String key = issue.get("key").toString();
 
+
+
                 LocalDateTime openDate = LocalDateTime.parse(issue.getJSONObject("fields").getString("created").substring(0, 16));
+                LocalDateTime resolutionDate = LocalDateTime.parse(issue.getJSONObject("fields").getString("resolutiondate").substring(0, 16));
                 JSONArray affectedVersions = issue.getJSONObject("fields").getJSONArray("versions");
 
+                injectionVersion = null;
+
+                if(affectedVersions.length() > 0) {
+                    //abbiamo informazioni sulle AV --> la prima AV è presumibilmente la IV
+                    injectionVersion = affectedVersions.getJSONObject(0).getInt("id");
+                    //System.out.println("inj: " + injectionVersion);
+                }
+
                 if (affectedVersions.length() > 0) {
-                    for (int k = 0; k < affectedVersions.length(); k++) {
-                        //se ho AV allora la IV sarà la prima versione
-                        injectionVersion = affectedVersions.getJSONObject(0).getInt("id");
+                    //se ho AV allora la IV sarà la prima versione
+                    injectionVersion = affectedVersions.getJSONObject(0).getInt("id");
+                    //l'id non ci va bene, a noi serve l'indice (1, 2, ...)
+                    if(releseIDMap.containsKey(injectionVersion)) {
+                        injectionVersion = releseIDMap.get(injectionVersion).getIndex();
                     }
                 }
 
+                Ticket ticket = new Ticket(key, openDate, resolutionDate, injectionVersion);
+                tickets.add(ticket);
 
             }
         } while (i < total);
-        return;
+
+        for(Ticket ticket: tickets) {
+            ticket.setOpeningVersion(getOV(ticket, releaseList));
+            ticket.setFixedVersion(getFV(ticket, releaseList));
+            System.out.println("Tickets: " + ticket);
+        }
+
+
+        return tickets;
     }
+
+    public static Integer getOV(Ticket ticket, List<Release> releases) {
+        //per ogni release, se la data dell'apertura del ticket è più piccola della data della release,
+        //allora è la OV che cerco
+        for (Release release : releases) {
+            if(ticket.getOpeningDate().compareTo(release.getReleaseDate()) < 0) {
+                return release.getIndex();
+            }
+        }
+        return null;
+    }
+
+    public static Integer getFV(Ticket ticket, List<Release> releases) {
+        //come prima, se la resolution date è minore della release date allora è la FV che voglio
+        for (Release release : releases) {
+            if(ticket.getResolutionDate().compareTo(release.getReleaseDate()) < 0) {
+                return release.getIndex();
+            }
+        }
+        return null;
+    }
+
+    public static void commitsOfTheticket(List<RevCommit> commits, List<Ticket> tickets){
+        for (Ticket ticket: tickets) {
+            for (RevCommit commit: commits) {
+                //--> \\b indica “word boundary”, quindi l’ID del ticket deve essere una parola separata e non parte di un’altra parola
+                if (commit.getShortMessage().matches(".*\\b" + Pattern.quote(ticket.getId()) + "\\b.*")){
+                    ticket.getCommits().add(commit);
+                }
+            }
+        }
+    }
+
+
 }

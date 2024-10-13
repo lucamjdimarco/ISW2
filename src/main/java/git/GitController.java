@@ -5,6 +5,7 @@ import model.FileJava;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.Edit;
@@ -25,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.util.*;
 
@@ -44,6 +46,24 @@ public class GitController {
         calculateAvgAddedLOC(releases);
         calculateNumberOfAuthorsPerFile(releases, repoPath);
 
+    }
+
+    public static List<RevCommit> retrieveCommits(String path) {
+        Iterable<RevCommit> commits;
+        List<RevCommit> commitList=new ArrayList<>();
+        try (Git git = Git.open((Path.of(path).toFile()))) {
+            commits = git.log().all().call();
+            for (RevCommit commit : commits) {
+                commitList.add(commit);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NoHeadException e) {
+            throw new RuntimeException(e);
+        } catch (GitAPIException e) {
+            throw new RuntimeException(e);
+        }
+        return commitList;
     }
 
     //associo i commit alle release

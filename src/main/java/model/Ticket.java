@@ -17,10 +17,11 @@ public class Ticket {
     private Integer fixedVersion;
     private List<Integer> affectedVersion = new ArrayList<>();
 
-    public Ticket(String id, LocalDateTime openingDate, Integer injectedVersion) {
+    public Ticket(String id, LocalDateTime openingDate, LocalDateTime resolutionDate, Integer injectedVersion) {
         this.id=id;
         this.openingDate=openingDate;
         this.injectedVersion=injectedVersion;
+        this.resolutionDate = resolutionDate;
     }
 
     /* --- GETTERS --- */
@@ -98,11 +99,17 @@ public class Ticket {
         this.affectedVersion.add(av);
     }
 
-
-
-
-
-
-
-
+    @Override
+    public String toString() {
+        return "Ticket{" +
+                "commits=" + commits +
+                ", id='" + id + '\'' +
+                ", openingDate=" + openingDate +
+                ", resolutionDate=" + resolutionDate +
+                ", injectedVersion=" + injectedVersion +
+                ", openingVersion=" + openingVersion +
+                ", fixedVersion=" + fixedVersion +
+                ", affectedVersion=" + affectedVersion +
+                '}';
+    }
 }
