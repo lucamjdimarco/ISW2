@@ -88,7 +88,7 @@ public class JiraTicket {
         for(Ticket ticket: tickets) {
             ticket.setOpeningVersion(getOV(ticket, releaseList));
             ticket.setFixedVersion(getFV(ticket, releaseList));
-            System.out.println("Tickets: " + ticket);
+            //System.out.println("Tickets: " + ticket);
         }
 
 
@@ -125,6 +125,16 @@ public class JiraTicket {
                 }
             }
         }
+    }
+
+    public static void removeTicketWithoutCommit(List<Ticket> tickets) {
+        List<Ticket> ticketsToRemove = new ArrayList<>();
+        for (Ticket ticket: tickets) {
+            if (ticket.getCommits().isEmpty()){
+                ticketsToRemove.add(ticket);
+            }
+        }
+        tickets.removeAll(ticketsToRemove);
     }
 
 

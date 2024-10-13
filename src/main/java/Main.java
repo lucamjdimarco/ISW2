@@ -10,21 +10,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static jira.JiraTicket.commitsOfTheticket;
+import static jira.JiraTicket.removeTicketWithoutCommit;
 
 
 public class Main {
 
     public static void main(String[] args) {
         try {
-            List<Release> releases = new ArrayList<>();
-            List<Ticket> tickets = new ArrayList<>();
-            List<RevCommit> commits = new ArrayList<>();
+            List<Release> releases;
+            List<Ticket> tickets;
+            List<RevCommit> commits;
 
             releases = JiraRelease.getRelease("BOOKKEEPER");
             tickets = JiraTicket.getTickets("BOOKKEEPER");
             commits = GitController.retrieveCommits("/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
 
             commitsOfTheticket(commits, tickets);
+            removeTicketWithoutCommit(tickets);
 
             for(Ticket ticket: tickets){
                 System.out.println("Ticket: " + ticket);
