@@ -7,10 +7,12 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
-import static jira.JiraTicket.commitsOfTheticket;
-import static jira.JiraTicket.removeTicketWithoutCommit;
+import static jira.JiraTicket.*;
+import static utils.Proportion.*;
 
 
 public class Main {
@@ -27,10 +29,35 @@ public class Main {
 
             commitsOfTheticket(commits, tickets);
             removeTicketWithoutCommit(tickets);
+            fixTicketList(tickets);
+
+            //PROPORTION
+            Collections.reverse(tickets);
+            getProportion(tickets);
+            for(Ticket ticket: tickets){
+                calculateAV(ticket);
+            }
+
+            //CALCOLO DELLA BUGGY
+            //processTickets(tickets, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper", releases);
+            processReleasesAndMarkBuggyFiles(releases, tickets, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
+
 
             for(Ticket ticket: tickets){
                 System.out.println("Ticket: " + ticket);
             }
+
+            //RIATTIVARE IL CALCOLO DELLE METRICHE
+
+            for(Release release: releases){
+                for(FileJava file: release.getFiles()){
+                    if(file.isBuggy()){
+                        System.out.println("File: " + file.getName() + " is buggy");
+                    }
+                }
+            }
+
+
 
 
 
@@ -40,7 +67,7 @@ public class Main {
             FileWriter fileWriter = new FileWriter("releases.csv");
 
             // Scrivi l'intestazione del CSV
-            fileWriter.append("VERSION, FILE_NAME, LOC, LOC_TOUCHED, NUMBER_OF_REVISIONS, LOC_ADDED, AVG_LOC_ADDED, NUMBER_OF_AUTHORS, MAX_LOC_ADDED, TOTAL_LOC_REMOVED, MAX_LOC_REMOVED, AVG_LOC_TOUCHED\n");
+            fileWriter.append("VERSION, FILE_NAME, LOC, LOC_TOUCHED, NUMBER_OF_REVISIONS, LOC_ADDED, AVG_LOC_ADDED, NUMBER_OF_AUTHORS, MAX_LOC_ADDED, TOTAL_LOC_REMOVED, MAX_LOC_REMOVED, AVG_LOC_TOUCHED, BUGGY\n");
 
             //int i = 0;
 
@@ -60,7 +87,13 @@ public class Main {
                     fileWriter.append(file.getMaxLocAdded() + ",");
                     fileWriter.append(file.getTotalLocRemoved() + ",");
                     fileWriter.append(file.getMaxLocRemoved() + ",");
-                    fileWriter.append(file.getAvgLocTouched() + "\n");
+                    fileWriter.append(file.getAvgLocTouched() + ",");
+                    if(file.isBuggy()){
+                        fileWriter.append("YES\n");
+                    } else {
+                        fileWriter.append("NO\n");
+                    }
+
                 }
 
 

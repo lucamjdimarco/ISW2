@@ -29,10 +29,6 @@ public class JiraRelease {
     }
 
     public static List<Release> getRelease(String project) throws IOException {
-
-        //Fills the arraylist with releases dates and orders them
-        //Ignores releases with missing dates
-
         List<Release> releaseList = new ArrayList<>();
         releases = new ArrayList<LocalDateTime>();
         Integer i;
@@ -83,11 +79,7 @@ public class JiraRelease {
 
         }
 
-        //calculateMetric(releaseList, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
-
-        /*for(int k = 0; k < releaseList.size(); k++){
-            System.out.println(releaseList.get(k));
-        }*/
+        calculateMetric(releaseList, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
 
         return releaseList;
     }

@@ -17,6 +17,8 @@ public class FileJava {
 
     private int avgLocTouched;
 
+    private boolean isBuggy;
+
     public FileJava(String name) {
         this.name = name;
         this.loc = 0;
@@ -29,6 +31,7 @@ public class FileJava {
         this.totalLocRemoved = 0;
         this.maxLocRemoved = 0;
         this.avgLocTouched = 0;
+        this.isBuggy = false;
 
 
     }
@@ -78,6 +81,10 @@ public class FileJava {
         return avgLocTouched;
     }
 
+    public boolean isBuggy() {
+        return isBuggy;
+    }
+
 
     /* ----------------- */
 
@@ -125,6 +132,10 @@ public class FileJava {
 
     public void setAvgLocTouched(int avgLocTouched) {
         this.avgLocTouched = avgLocTouched;
+    }
+
+    public void setBuggy(boolean buggy) {
+        isBuggy = buggy;
     }
 
 

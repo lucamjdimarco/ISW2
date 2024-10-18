@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -136,6 +137,32 @@ public class JiraTicket {
         }
         tickets.removeAll(ticketsToRemove);
     }
+
+    public static void fixTicketList(List<Ticket> tickets) {
+        Iterator<Ticket> ticketIterator = tickets.iterator();
+        while(ticketIterator.hasNext()) {
+            Ticket ticket = ticketIterator.next();
+            if(ticket.getFixedVersion() == null || ticket.getOpeningVersion() == null || ticket.getOpeningVersion() > ticket.getFixedVersion()) {
+                ticketIterator.remove();
+            } else if(ticket.getInjectedVersion() != null && ticket.getInjectedVersion() > ticket.getOpeningVersion()) {
+                ticket.setInjectedVersion(null);
+            } else if(ticket.getInjectedVersion() != null && ticket.getInjectedVersion().equals(ticket.getFixedVersion())) {
+                ticketIterator.remove();
+            }
+        }
+    }
+
+    public static void calculateAV(Ticket ticket) {
+        if (ticket.getInjectedVersion() != null && ticket.getFixedVersion() != null) {
+            //l'AV sarà il range tra IV e FV-1
+            List<Integer> affectedVersions = new ArrayList<>();
+            for (int version = ticket.getInjectedVersion(); version < ticket.getFixedVersion(); version++) {
+                affectedVersions.add(version);
+            }
+            ticket.setAffectedVersion(affectedVersions);
+        }
+    }
+
 
 
 }
