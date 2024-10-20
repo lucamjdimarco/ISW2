@@ -39,9 +39,7 @@ public class GitController {
     public static void calculateMetric(List<Release> releases, String repoPath) {
         associateCommitsWithReleases(releases, repoPath);
         associateFilesWithCommits(releases, repoPath);
-        /* ------- */
         calculateLOCForReleaseFiles(releases, repoPath);
-        /* ------- */
         calculateNumberOfRevisionsPerFile(releases, repoPath);
         calculateTouchedLOCAndRemovedLOCForReleaseFiles(releases, repoPath);
         calculateAddedLOCAndMaxPerFile(releases, repoPath);

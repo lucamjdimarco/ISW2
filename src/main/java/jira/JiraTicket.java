@@ -50,14 +50,8 @@ public class JiraTicket {
             JSONArray issues = json.getJSONArray("issues");
             total = json.getInt("total");
             for (; i < total && i < j; i++) {
-                //Iterate through each bug
-                //String key = issues.getJSONObject(i%1000).get("key").toString();
-                //System.out.println(key);
-
                 JSONObject issue = issues.getJSONObject(i % 1000);
                 String key = issue.get("key").toString();
-
-
 
                 LocalDateTime openDate = LocalDateTime.parse(issue.getJSONObject("fields").getString("created").substring(0, 16));
                 LocalDateTime resolutionDate = LocalDateTime.parse(issue.getJSONObject("fields").getString("resolutiondate").substring(0, 16));
@@ -65,11 +59,6 @@ public class JiraTicket {
 
                 injectionVersion = null;
 
-                /*if(affectedVersions.length() > 0) {
-                    //abbiamo informazioni sulle AV --> la prima AV è presumibilmente la IV
-                    injectionVersion = affectedVersions.getJSONObject(0).getInt("id");
-                    //System.out.println("inj: " + injectionVersion);
-                }*/
 
                 if (affectedVersions.length() > 0) {
                     //se ho AV allora la IV sarà la prima versione
@@ -89,7 +78,6 @@ public class JiraTicket {
         for(Ticket ticket: tickets) {
             ticket.setOpeningVersion(getOV(ticket, releaseList));
             ticket.setFixedVersion(getFV(ticket, releaseList));
-            //System.out.println("Tickets: " + ticket);
         }
 
 
