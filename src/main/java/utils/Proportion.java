@@ -234,7 +234,7 @@ public class Proportion {
     //sennò devo prendere tutti gli AV di un ticket, prendere i commit in quel ticket e vedere i file toccati
     //andare nella release indicata dal AV e mettere i file a isBuggy = true
 
-    public static void processReleasesAndMarkBuggyFiles(List<Release> releases, List<Ticket> tickets, String repoPath) throws IOException {
+    /*public static void processReleasesAndMarkBuggyFiles(List<Release> releases, List<Ticket> tickets, String repoPath) throws IOException {
         // Per ogni release
         for (Release release : releases) {
             List<RevCommit> releaseCommits = release.getCommits(); // Ottieni i commit associati alla release
@@ -267,6 +267,42 @@ public class Proportion {
             }
         }
         return null; // Nessun ticket trovato
+    }
+
+    */
+
+
+    public static void markBuggyFilesUsingAffectedVersions(List<Ticket> tickets, List<Release> releases, String repoPath) {
+        for (Ticket ticket : tickets) {
+            List<Integer> affectedVersions = ticket.getAffectedVersion();
+
+            // Per ogni versione affetta (AV)
+            for (Integer affectedVersion : affectedVersions) {
+                Release affectedRelease = getReleaseByVersion(releases, affectedVersion);
+
+                if (affectedRelease != null) {
+                    // Per ogni commit associato al ticket
+                    for (RevCommit commit : ticket.getCommits()) {
+                        try {
+                            List<String> modifiedFiles = getModifiedJavaFiles(commit, repoPath);
+                            // Marca i file come buggy nella release affetta
+                            markFilesAsBuggy(modifiedFiles, affectedRelease);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static Release getReleaseByVersion(List<Release> releases, int version) {
+        for (Release release : releases) {
+            if (release.getIndex() == version) {
+                return release;
+            }
+        }
+        return null; // Nessuna release trovata
     }
 
     public static void markFilesAsBuggy(List<String> modifiedFiles, Release release) {

@@ -23,9 +23,17 @@ public class Main {
             List<Ticket> tickets;
             List<RevCommit> commits;
 
-            releases = JiraRelease.getRelease("BOOKKEEPER");
-            tickets = JiraTicket.getTickets("BOOKKEEPER");
-            commits = GitController.retrieveCommits("/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
+            //releases = JiraRelease.getRelease("BOOKKEEPER");
+            releases = JiraRelease.getRelease("SYNCOPE");
+
+            System.out.println("Release 1: " + releases.get(0).getReleaseDate());
+            System.out.println("Release 4: " + releases.get(3).getReleaseDate());
+
+
+            //tickets = JiraTicket.getTickets("BOOKKEEPER");
+            tickets = JiraTicket.getTickets("SYNCOPE");
+            //commits = GitController.retrieveCommits("/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
+            commits = GitController.retrieveCommits("/Users/lucadimarco/Desktop/syncope/syncope");
 
             commitsOfTheticket(commits, tickets);
             removeTicketWithoutCommit(tickets);
@@ -40,7 +48,9 @@ public class Main {
 
             //CALCOLO DELLA BUGGY
             //processTickets(tickets, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper", releases);
-            processReleasesAndMarkBuggyFiles(releases, tickets, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
+            //processReleasesAndMarkBuggyFiles(releases, tickets, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
+            //markBuggyFilesUsingAffectedVersions(tickets, releases, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
+            markBuggyFilesUsingAffectedVersions(tickets, releases, "/Users/lucadimarco/Desktop/syncope/syncope");
 
 
             for(Ticket ticket: tickets){

@@ -65,11 +65,11 @@ public class JiraTicket {
 
                 injectionVersion = null;
 
-                if(affectedVersions.length() > 0) {
+                /*if(affectedVersions.length() > 0) {
                     //abbiamo informazioni sulle AV --> la prima AV è presumibilmente la IV
                     injectionVersion = affectedVersions.getJSONObject(0).getInt("id");
                     //System.out.println("inj: " + injectionVersion);
-                }
+                }*/
 
                 if (affectedVersions.length() > 0) {
                     //se ho AV allora la IV sarà la prima versione

@@ -79,7 +79,8 @@ public class JiraRelease {
 
         }
 
-        calculateMetric(releaseList, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
+        //calculateMetric(releaseList, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
+        calculateMetric(releaseList, "/Users/lucadimarco/Desktop/syncope/syncope");
 
         return releaseList;
     }

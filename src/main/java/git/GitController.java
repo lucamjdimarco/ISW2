@@ -39,7 +39,9 @@ public class GitController {
     public static void calculateMetric(List<Release> releases, String repoPath) {
         associateCommitsWithReleases(releases, repoPath);
         associateFilesWithCommits(releases, repoPath);
+        /* ------- */
         calculateLOCForReleaseFiles(releases, repoPath);
+        /* ------- */
         calculateNumberOfRevisionsPerFile(releases, repoPath);
         calculateTouchedLOCAndRemovedLOCForReleaseFiles(releases, repoPath);
         calculateAddedLOCAndMaxPerFile(releases, repoPath);
@@ -92,52 +94,60 @@ public class GitController {
         }
     }
 
+    public static boolean fileExistsInRepository(Repository repository, RevCommit commit, String filePath) throws IOException {
+        try (TreeWalk treeWalk = TreeWalk.forPath(repository, filePath, commit.getTree())) {
+            return treeWalk != null;
+        }
+    }
+
     //associo i file ai commit --> l'idea base è tirarmi fuori tutti i file del progetto dalla lista dei file
     //toccati dai commit
     public static void associateFilesWithCommits(List<Release> releases, String repoPath) {
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
-            try (Git git = new Git(repository)) {
+            //try (Git git = new Git(repository)) {
                 //ottengo tutti i commit dal repository
-                Iterable<RevCommit> commits = git.log().call();
+                //Iterable<RevCommit> commits = git.log().call();
 
-                for (RevCommit commit : commits) {
-                    for (Release release : releases) {
-                        for (RevCommit releaseCommit : release.getCommits()) {
-                            //se il commit è incluso in quella release
-                            if (commit.getId().equals(releaseCommit.getId())) {
-                                //se il commit è associato alla release
-                                //inizializzo un nuovo TreeWalk per navigare l'albero del commit
-                                try (TreeWalk treeWalk = new TreeWalk(repository)) {
-                                    treeWalk.addTree(commit.getTree());
-                                    treeWalk.setRecursive(true);
+                //for (RevCommit commit : commits) {
+            for (Release release : releases) {
+                for (RevCommit releaseCommit : release.getCommits()) {
+                    //se il commit è incluso in quella release
+                    //if (commit.getId().equals(releaseCommit.getId())) {
+                        //se il commit è associato alla release
+                        //inizializzo un nuovo TreeWalk per navigare l'albero del commit
+                    try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                        //treeWalk.addTree(commit.getTree());
+                        treeWalk.addTree(releaseCommit.getTree());
+                        treeWalk.setRecursive(true);
 
-                                    while (treeWalk.next()) {
-                                        //per ogni file, ottengo il nome
-                                        String filePath = treeWalk.getPathString();
-                                        //controllo se è .java
-                                        if (filePath.endsWith(".java")) {
-                                            //controllo se è già presente nella lista dei file
-                                            //non voglio duplicati
-                                            boolean exists = false;
-                                            for (FileJava existingFile : release.getFiles()) {
-                                                if (existingFile.getName().equals(filePath)) {
-                                                    exists = true;
-                                                    break; //esco se trovo un duplicato
-                                                }
-                                            }
-                                            //se non esiste, lo aggiungo creando un nuovo oggetto FileJava
-                                            if (!exists) {
-                                                FileJava file = new FileJava(filePath);
-                                                release.addFile(file);
-                                            }
-                                        }
+                        while (treeWalk.next()) {
+                            //per ogni file, ottengo il nome
+                            String filePath = treeWalk.getPathString();
+                            //controllo se è .java
+                            //if (filePath.endsWith(".java")) {
+                            if (filePath.endsWith(".java") && fileExistsInRepository(repository, releaseCommit, filePath)) {
+                                //controllo se è già presente nella lista dei file
+                                //non voglio duplicati
+                                boolean exists = false;
+                                for (FileJava existingFile : release.getFiles()) {
+                                    if (existingFile.getName().equals(filePath)) {
+                                        exists = true;
+                                        break; //esco se trovo un duplicato
                                     }
+                                }
+                                //se non esiste, lo aggiungo creando un nuovo oggetto FileJava
+                                if (!exists) {
+                                    FileJava file = new FileJava(filePath);
+                                    release.addFile(file);
                                 }
                             }
                         }
                     }
+                    //}
                 }
             }
+                //}
+            //}
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -192,7 +202,8 @@ public class GitController {
                     }
                 }
                 //aggiorna le LOC totali nel JavaFile
-                javaFile.setLoc(javaFile.getLoc() + numLines);
+                //javaFile.setLoc(javaFile.getLoc() + numLines);
+                javaFile.setLoc(numLines);
             }
         }
     }
@@ -307,6 +318,64 @@ public class GitController {
         }
     }
 
+    public static List<String> getNewLinesFromCommit(Repository repository, RevCommit commit, String filePath, Edit edit) throws IOException {
+        List<String> newLines = new ArrayList<>();
+        try (TreeWalk treeWalk = new TreeWalk(repository)) {
+            treeWalk.addTree(commit.getTree());
+            treeWalk.setRecursive(true);
+            treeWalk.setFilter(PathFilter.create(filePath));
+
+            if (treeWalk.next()) {
+                ObjectId objectId = treeWalk.getObjectId(0);
+                ObjectLoader loader = repository.open(objectId);
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(loader.openStream()));
+                String line;
+                int currentLine = 0;
+                while ((line = reader.readLine()) != null) {
+                    // Prendi solo le righe modificate
+                    if (currentLine >= edit.getBeginB() && currentLine < edit.getEndB()) {
+                        newLines.add(line);
+                    }
+                    currentLine++;
+                }
+            }
+        }
+        return newLines;
+    }
+
+    public static List<String> getOldLinesFromCommit(Repository repository, RevCommit commit, String filePath, Edit edit) throws IOException {
+        List<String> oldLines = new ArrayList<>();
+        try (TreeWalk treeWalk = new TreeWalk(repository)) {
+            treeWalk.addTree(commit.getTree());
+            treeWalk.setRecursive(true);
+            treeWalk.setFilter(PathFilter.create(filePath));
+
+            if (treeWalk.next()) {
+                ObjectId objectId = treeWalk.getObjectId(0);
+                ObjectLoader loader = repository.open(objectId);
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(loader.openStream()));
+                String line;
+                int currentLine = 0;
+                while ((line = reader.readLine()) != null) {
+                    if (currentLine >= edit.getBeginA() && currentLine < edit.getEndA()) {
+                        oldLines.add(line);
+                    }
+                    currentLine++;
+                }
+            }
+        }
+        return oldLines;
+    }
+
+
+    public static boolean isCommentOrEmpty(String line) {
+        String trimmedLine = line.trim();
+        // Controlla commenti singoli e multi-linea
+        return trimmedLine.isEmpty() || trimmedLine.startsWith("//") || trimmedLine.startsWith("/*") || trimmedLine.startsWith("*") || trimmedLine.startsWith("*/");
+    }
+
     //calcolo delle LOC toccate e rimosse per ogni commit
     private static void calculateTouchedLOCAndRemovedLOCForCommit(Repository repository, RevCommit commit,
                                                                   List<FileJava> javaFiles,
@@ -338,10 +407,33 @@ public class GitController {
                             int addedLines = 0;
                             int removedLines = 0;
 
+                            //---------------------------------------------
+                            //---------------------------------------------
+
                             for (Edit edit : diffFormatter.toFileHeader(diff).toEditList()) {
-                                addedLines += edit.getEndB() - edit.getBeginB();
-                                removedLines += edit.getEndA() - edit.getBeginA();
+                                /*addedLines += edit.getEndB() - edit.getBeginB();
+                                removedLines += edit.getEndA() - edit.getBeginA();*/
+                                List<String> newLines = getNewLinesFromCommit(repository, commit, filePath, edit);
+
+                                // Aggiungi solo le righe non commento o non vuote
+                                for (String line : newLines) {
+                                    if (!isCommentOrEmpty(line)) {
+                                        addedLines++;
+                                    }
+                                }
+
+                                List<String> oldLines = getOldLinesFromCommit(repository, parent, filePath, edit);
+
+                                // Conta solo le righe rimosse che non sono commenti o vuote
+                                for (String line : oldLines) {
+                                    if (!isCommentOrEmpty(line)) {
+                                        removedLines++;
+                                    }
+                                }
                             }
+
+                            //---------------------------------------------
+                            //---------------------------------------------
 
                             int locTouched = addedLines + removedLines;
                             totalTouchedLocPerFile.put(filePath, totalTouchedLocPerFile.getOrDefault(filePath, 0) + locTouched);
@@ -366,7 +458,8 @@ public class GitController {
                         RevCommit parent = commit.getParentCount() > 0 ? commit.getParent(0) : null;
 
                         if (parent != null) {
-                            calculateAddedLOCAndMaxForCommit(repository, commit, parent, release.getFiles(), maxLocAddedPerFile);
+                            //calculateAddedLOCAndMaxForCommit(repository, commit, parent, release.getFiles(), maxLocAddedPerFile);
+                            calculateAddedLOCAndMaxForCommit(repository, commit, parent, release.getFiles(), maxLocAddedPerFile, git);
                         } else {
                             calculateAddedLOCAndMaxForFirstCommit(repository, commit, release.getFiles(), maxLocAddedPerFile);
                         }
@@ -390,8 +483,12 @@ public class GitController {
         }
     }
 
+
+
+
+
     //calcolo LOC aggiunte e MAX LOX per commit
-    private static void calculateAddedLOCAndMaxForCommit(Repository repository, RevCommit commit, RevCommit parent, List<FileJava> javaFiles, Map<String, Integer> maxLocAddedPerFile) throws IOException {
+    private static void calculateAddedLOCAndMaxForCommit(Repository repository, RevCommit commit, RevCommit parent, List<FileJava> javaFiles, Map<String, Integer> maxLocAddedPerFile, Git git) throws IOException {
         try (DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
             diffFormatter.setRepository(repository);
             diffFormatter.setDetectRenames(true);
@@ -404,7 +501,8 @@ public class GitController {
             for (DiffEntry diff : diffs) {
                 String filePath = diff.getNewPath();
 
-                if (filePath.endsWith(".java")) {
+                /* ---------------------------------------------*/
+                /*if (filePath.endsWith(".java")) {
                     int addedLines = 0;
 
                     for (Edit edit : diffFormatter.toFileHeader(diff).toEditList()) {
@@ -418,7 +516,32 @@ public class GitController {
                             maxLocAddedPerFile.put(filePath, Math.max(maxLocAddedPerFile.getOrDefault(filePath, 0), addedLines));
                         }
                     }
+                }*/
+                /* ---------------------------------------------*/
+                /* ---------------------------------------------*/
+                if (filePath.endsWith(".java")) {
+                    int addedLines = 0;
+
+                    for (Edit edit : diffFormatter.toFileHeader(diff).toEditList()) {
+                        // Ottieni le righe aggiunte dal commit
+                        List<String> newLines = getNewLinesFromCommit(repository, commit, filePath, edit);
+
+                        // Filtra le righe che non sono commenti o vuote
+                        for (String line : newLines) {
+                            if (!isCommentOrEmpty(line)) {
+                                addedLines++;
+                            }
+                        }
+                    }
+
+                    for (FileJava javaFile : javaFiles) {
+                        if (javaFile.getName().equals(filePath)) {
+                            javaFile.setLocAdded(javaFile.getLocAdded() + addedLines);
+                            maxLocAddedPerFile.put(filePath, Math.max(maxLocAddedPerFile.getOrDefault(filePath, 0), addedLines));
+                        }
+                    }
                 }
+
             }
         }
     }
@@ -442,7 +565,12 @@ public class GitController {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(loader.openStream()))) {
                         String line;
                         while ((line = reader.readLine()) != null) {
-                            if (!line.trim().isEmpty()) {
+                            /*if (!line.trim().isEmpty()) {
+                                addedLines++;
+                            }*/
+                            String trimmedLine=line.trim();
+                            if (!trimmedLine.isEmpty() && !(trimmedLine.startsWith("/*") ||
+                                    trimmedLine.startsWith("*") || trimmedLine.startsWith("//"))) {
                                 addedLines++;
                             }
                         }
