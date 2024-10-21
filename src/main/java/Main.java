@@ -12,6 +12,8 @@ import weka.WekaController;
 import java.util.Collections;
 import java.util.List;
 
+import static weka.WekaController.convertCSVtoARFF;
+
 
 public class Main {
 
@@ -59,12 +61,14 @@ public class Main {
 
             WriteCSV.writeReleasesForWalkForward(releases, "fileCSV/training/file", "fileCSV/testing/file");
 
-            /*System.out.println(" ------- CONVERSIONE CSV TO ARFF ------- ");
+            System.out.println(" ------- CONVERSIONE CSV TO ARFF ------- ");
 
-            for(int i = 1; i < releases.size(); i++) {
-                WekaController.convertCSVtoARFF("fileCSV/training/file_train_step_" + i + ".csv", "fileARFF/training/file_train_step_" + i + ".arff");
-                WekaController.convertCSVtoARFF("fileCSV/testing/file_test_step_" + i + ".csv", "fileARFF/testing/file_test_step_" + i + ".arff");
+            /*for(int i = 1; i < releases.size(); i++) {
+                //WekaController.convertCSVtoARFF();
             }*/
+
+            WekaController.convertAllCsvInFolder("fileCSV/training");
+            WekaController.convertAllCsvInFolder("fileCSV/testing");
 
             System.out.println(" ------- FINE ------- ");
 
