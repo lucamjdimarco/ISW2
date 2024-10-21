@@ -7,6 +7,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import utils.CalculateBugginess;
 import utils.Proportion;
 import utils.WriteCSV;
+import weka.WekaController;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,7 +57,14 @@ public class Main {
 
             System.out.println(" ------- SCRITTURA SU FILE ------- ");
 
-            WriteCSV.writeReleasesToCsv(releases, "releases.csv");
+            WriteCSV.writeReleasesForWalkForward(releases, "fileCSV/training/file", "fileCSV/testing/file");
+
+            /*System.out.println(" ------- CONVERSIONE CSV TO ARFF ------- ");
+
+            for(int i = 1; i < releases.size(); i++) {
+                WekaController.convertCSVtoARFF("fileCSV/training/file_train_step_" + i + ".csv", "fileARFF/training/file_train_step_" + i + ".arff");
+                WekaController.convertCSVtoARFF("fileCSV/testing/file_test_step_" + i + ".csv", "fileARFF/testing/file_test_step_" + i + ".arff");
+            }*/
 
             System.out.println(" ------- FINE ------- ");
 
