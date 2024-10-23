@@ -113,6 +113,8 @@ public class WekaController {
                 trainingData.setClassIndex(trainingData.numAttributes() - 1);
                 testingData.setClassIndex(testingData.numAttributes() - 1);
 
+                /* BISOGNA FARE PRIMA FUTURE SELECTION E POI SAMPLING --> DA FARE E DA CAMBIARE!!! */
+
                 // ---- RUN SENZA SELECTION - SEMPLICE ----
                 runSimpleClassifier(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
@@ -158,6 +160,7 @@ public class WekaController {
         }
     }
 
+
     private static void runWithFeatureSelection(String nameProj, int walkIteration, Instances trainingData, Instances testingData,
                                                 List<MetricOfClassifier> metricOfClassifierList, Classifier[] classifiers, boolean isUnderSampling, boolean isOverSampling) throws Exception {
 
@@ -192,6 +195,20 @@ public class WekaController {
 
     private static void runWithFeatureSelectionAndUnderSampling(String nameProj, int walkIteration, Instances trainingData, Instances testingData,
                                                                 List<MetricOfClassifier> metricOfClassifierList, Classifier[] classifiers) throws Exception {
+
+        // ---- FUTURE SELECTION ----
+        AttributeSelection attributeSelection = new AttributeSelection();
+        CfsSubsetEval eval = new CfsSubsetEval();
+        BestFirst search = new BestFirst();
+
+        attributeSelection.setEvaluator(eval);
+        attributeSelection.setSearch(search);
+        attributeSelection.setInputFormat(trainingData);
+
+        // applico il filtro al training set
+        Instances filteredTrainingData = Filter.useFilter(trainingData, attributeSelection);
+        filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
+
         // ---- UNDER-SAMPLING ----
         SpreadSubsample underSampler = new SpreadSubsample();
         underSampler.setInputFormat(trainingData);
@@ -200,11 +217,20 @@ public class WekaController {
         underSampler.setOptions(Utils.splitOptions("-M 1.0"));
         Instances underSampledTrainingData = Filter.useFilter(trainingData, underSampler);
 
-        System.out.println("Numero di istanze prima del campionamento: " + trainingData.numInstances());
-        System.out.println("Numero di istanze dopo under-sampling: " + underSampledTrainingData.numInstances());
+        // ---- RUN CON I DATI UNDER-SAMPLED ----
+        for (Classifier classifier : classifiers) {
+            classifier.buildClassifier(underSampledTrainingData);
+            Evaluation evalModel = new Evaluation(testingData);
+            evalModel.evaluateModel(classifier, testingData);
 
-        // ---- RUN CON FUTURE SELECTION ----
-        runWithFeatureSelection(nameProj, walkIteration, underSampledTrainingData, testingData, metricOfClassifierList, classifiers, true, false);
+            MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
+                    classifier.getClass().getSimpleName(), true, true, false);
+            setValueinTheClassifier(classifierEval, evalModel, underSampledTrainingData.numInstances(), testingData.numInstances());
+            metricOfClassifierList.add(classifierEval);
+        }
+
+        //System.out.println("Numero di istanze prima del campionamento: " + trainingData.numInstances());
+        //System.out.println("Numero di istanze dopo under-sampling: " + underSampledTrainingData.numInstances());
     }
 
     /*private static double calculateMajorityClassPercentage(Instances data) {
