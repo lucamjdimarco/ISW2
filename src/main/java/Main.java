@@ -12,6 +12,7 @@ import weka.WekaController;
 import java.util.Collections;
 import java.util.List;
 
+import static weka.WekaController.calculateWeka;
 import static weka.WekaController.convertCSVtoARFF;
 
 
@@ -69,6 +70,8 @@ public class Main {
 
             WekaController.convertAllCsvInFolder("fileCSV/training");
             WekaController.convertAllCsvInFolder("fileCSV/testing");
+
+            calculateWeka(project, releases.size());
 
             System.out.println(" ------- FINE ------- ");
 
