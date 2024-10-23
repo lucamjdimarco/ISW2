@@ -17,6 +17,7 @@ import weka.filters.Filter;
 import weka.filters.supervised.attribute.AttributeSelection;
 
 import weka.core.converters.ConverterUtils;
+import weka.filters.supervised.instance.Resample;
 import weka.filters.supervised.instance.SpreadSubsample;
 
 import java.io.File;
@@ -122,7 +123,7 @@ public class WekaController {
                 runWithFeatureSelectionAndUnderSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
                 // ---- RUN CON FUTURE SELECTION E OVER-SAMPLING ----
-                runWithFeatureSelectionAndOverSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
+                //runWithFeatureSelectionAndOverSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
 
 
@@ -174,7 +175,7 @@ public class WekaController {
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
 
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
-        filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
+        //filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
 
         for (Classifier classifier : classifiers) {
@@ -199,24 +200,52 @@ public class WekaController {
         underSampler.setOptions(Utils.splitOptions("-M 1.0"));
         Instances underSampledTrainingData = Filter.useFilter(trainingData, underSampler);
 
+        System.out.println("Numero di istanze prima del campionamento: " + trainingData.numInstances());
+        System.out.println("Numero di istanze dopo under-sampling: " + underSampledTrainingData.numInstances());
+
         // ---- RUN CON FUTURE SELECTION ----
         runWithFeatureSelection(nameProj, walkIteration, underSampledTrainingData, testingData, metricOfClassifierList, classifiers, true, false);
     }
 
-    private static void runWithFeatureSelectionAndOverSampling(String nameProj, int walkIteration, Instances trainingData, Instances testingData,
-                                                               List<MetricOfClassifier> metricOfClassifierList, Classifier[] classifiers) throws Exception {
-        // ---- OVER-SAMPLING ----
-        SpreadSubsample overSampler = new SpreadSubsample();
-        overSampler.setInputFormat(trainingData);
-        // -M -1.0 = oversampling per bilanciare le classi con minoranza
-        overSampler.setOptions(Utils.splitOptions("-M -1.0"));
-        Instances overSampledTrainingData = Filter.useFilter(trainingData, overSampler);
+    /*private static double calculateMajorityClassPercentage(Instances data) {
 
-        // ---- RUN CON FUTURE SELECTION ----
-        runWithFeatureSelection(nameProj, walkIteration, overSampledTrainingData, testingData, metricOfClassifierList, classifiers, false, true);
+        int[] classCounts = new int[data.numClasses()];
+
+        for (int i = 0; i < data.numInstances(); i++) {
+            int classIndex = (int) data.instance(i).classValue();
+            classCounts[classIndex]++;
+        }
+
+        int majorityCount = 0;
+        for (int count : classCounts) {
+            if (count > majorityCount) {
+                majorityCount = count;
+            }
+        }
+        double majorityClassPercentage = (double) majorityCount / data.numInstances() * 100.0;
+
+        return majorityClassPercentage;
     }
 
 
+    private static void runWithFeatureSelectionAndOverSampling(String nameProj, int walkIteration, Instances trainingData, Instances testingData,
+                                                               List<MetricOfClassifier> metricOfClassifierList, Classifier[] classifiers) throws Exception {
+        // ---- OVER-SAMPLING ----
+        Resample overSampler = new Resample();
+        overSampler.setInputFormat(trainingData);
+        double majorityClassPercentage = calculateMajorityClassPercentage(trainingData);
+        //double majorityClassPercentage = 65.0;
+        double sampleSizePercent = 100.0 * (100.0 - majorityClassPercentage) / majorityClassPercentage;
+        overSampler.setOptions(Utils.splitOptions("-B 1.0 -Z " + sampleSizePercent));
+
+        Instances overSampledTrainingData = Filter.useFilter(trainingData, overSampler);
+
+        System.out.println("Numero di istanze prima del campionamento: " + trainingData.numInstances());
+        System.out.println("Numero di istanze dopo over-sampling: " + overSampledTrainingData.numInstances());
+
+        // ---- RUN CON FUTURE SELECTION ----
+        runWithFeatureSelection(nameProj, walkIteration, overSampledTrainingData, testingData, metricOfClassifierList, classifiers, false, true);
+    }*/
 
 
     private static void setValueinTheClassifier(MetricOfClassifier classifier, Evaluation eval, int trainingSet, int testingSet) {
