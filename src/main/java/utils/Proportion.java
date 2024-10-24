@@ -19,9 +19,19 @@ public class Proportion {
         throw new IllegalStateException("Utility class");
     }
 
-    public static void getProportion(List<Ticket> tickets) throws IOException {
+    public static void getProportion(List<Ticket> tickets, String project) throws IOException {
 
-        List<String> projectsToAdd = List.of("AVRO", "OPENJPA", "ZOOKEEPER", "STORM", "TAJO");
+        List<String> projectsToAdd = new ArrayList<>();
+
+        if(project.equals("BOOKKEEPER")) {
+            projectsToAdd = List.of("AVRO", "ZOOKEEPER");
+        } else if(project.equals("SYNCOPE")) {
+            projectsToAdd = List.of("PROTON", "OPENJPA");
+        } else {
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        //List<String> projectsToAdd = List.of("AVRO", "OPENJPA", "ZOOKEEPER", "STORM", "TAJO");
         //List<String> projectsToAdd = List.of("AVRO");
         projForColdStart.addAll(projectsToAdd);
 
@@ -119,36 +129,15 @@ public class Proportion {
 
         }
 
-        /*tickets = JiraTicket.getTickets("AVRO");
-        for(Ticket ticket: tickets){
-            if(ticket.getInjectedVersion() != null && ticket.getOpeningVersion() != null && ticket.getFixedVersion() != null
-                    && ticket.getOpeningVersion() != ticket.getFixedVersion()){
-                if((double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) / (ticket.getFixedVersion() - ticket.getOpeningVersion()) > 1 ) {
-                    p += (double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) / (ticket.getFixedVersion() - ticket.getOpeningVersion());
-                }else{
-                    p += 1;
-                }
-                counter++;
-            }
-        }
-        if(counter != 0) {
-            p = p / counter;
-            prop_calc.add(p);
-        }
 
-        return p;*/
-
-
-
-        //restituisco la media delle proportion
-        //se dispari restituisco il valore centrale
-        //se pari restituisco la media dei due valori centrali
-        prop_calc.sort(Comparator.naturalOrder());
+        /*prop_calc.sort(Comparator.naturalOrder());
         if(prop_calc.size() % 2 == 0) {
             return ((prop_calc.get(prop_calc.size() / 2) + prop_calc.get(prop_calc.size() / 2 - 1)) / 2);
         } else {
             return (prop_calc.get(prop_calc.size() / 2));
-        }
+        }*/
+        //restituisco al media delle proportion
+        return prop_calc.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
     }
 
 }

@@ -49,7 +49,7 @@ public class Main {
 
             System.out.println(" ------- CALCOLO PROPORTION ------- ");
 
-            Proportion.getProportion(tickets);
+            Proportion.getProportion(tickets, project);
             for(Ticket ticket: tickets){
                 JiraTicket.calculateAV(ticket);
             }

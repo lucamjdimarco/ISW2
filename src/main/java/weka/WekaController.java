@@ -127,6 +127,8 @@ public class WekaController {
                 // ---- RUN CON FUTURE SELECTION E OVER-SAMPLING ----
                 //runWithFeatureSelectionAndOverSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
+                runWithFeatureSelectionAndOverSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
+
 
 
 
@@ -233,7 +235,7 @@ public class WekaController {
         //System.out.println("Numero di istanze dopo under-sampling: " + underSampledTrainingData.numInstances());
     }
 
-    /*private static double calculateMajorityClassPercentage(Instances data) {
+    private static double calculateMajorityClassPercentage(Instances data) {
 
         int[] classCounts = new int[data.numClasses()];
 
@@ -256,12 +258,28 @@ public class WekaController {
 
     private static void runWithFeatureSelectionAndOverSampling(String nameProj, int walkIteration, Instances trainingData, Instances testingData,
                                                                List<MetricOfClassifier> metricOfClassifierList, Classifier[] classifiers) throws Exception {
+
+        // ---- FUTURE SELECTION ----
+        AttributeSelection attributeSelection = new AttributeSelection();
+        CfsSubsetEval eval = new CfsSubsetEval();
+        BestFirst search = new BestFirst();
+
+        attributeSelection.setEvaluator(eval);
+        attributeSelection.setSearch(search);
+        attributeSelection.setInputFormat(trainingData);
+
+        // applico il filtro al training set
+        Instances filteredTrainingData = Filter.useFilter(trainingData, attributeSelection);
+        filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
+
+
         // ---- OVER-SAMPLING ----
         Resample overSampler = new Resample();
         overSampler.setInputFormat(trainingData);
         double majorityClassPercentage = calculateMajorityClassPercentage(trainingData);
         //double majorityClassPercentage = 65.0;
-        double sampleSizePercent = 100.0 * (100.0 - majorityClassPercentage) / majorityClassPercentage;
+        //double sampleSizePercent = 100.0 * (100.0 - majorityClassPercentage) / majorityClassPercentage;
+        double sampleSizePercent = majorityClassPercentage * 2;
         overSampler.setOptions(Utils.splitOptions("-B 1.0 -Z " + sampleSizePercent));
 
         Instances overSampledTrainingData = Filter.useFilter(trainingData, overSampler);
@@ -270,8 +288,19 @@ public class WekaController {
         System.out.println("Numero di istanze dopo over-sampling: " + overSampledTrainingData.numInstances());
 
         // ---- RUN CON FUTURE SELECTION ----
-        runWithFeatureSelection(nameProj, walkIteration, overSampledTrainingData, testingData, metricOfClassifierList, classifiers, false, true);
-    }*/
+        //runWithFeatureSelection(nameProj, walkIteration, overSampledTrainingData, testingData, metricOfClassifierList, classifiers, false, true);
+
+        for (Classifier classifier : classifiers) {
+            classifier.buildClassifier(overSampledTrainingData);
+            Evaluation evalModel = new Evaluation(testingData);
+            evalModel.evaluateModel(classifier, testingData);
+
+            MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
+                    classifier.getClass().getSimpleName(), true, true, false);
+            setValueinTheClassifier(classifierEval, evalModel, overSampledTrainingData.numInstances(), testingData.numInstances());
+            metricOfClassifierList.add(classifierEval);
+        }
+    }
 
 
     private static void setValueinTheClassifier(MetricOfClassifier classifier, Evaluation eval, int trainingSet, int testingSet) {
