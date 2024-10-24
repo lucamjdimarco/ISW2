@@ -113,7 +113,7 @@ public class WekaController {
                 trainingData.setClassIndex(trainingData.numAttributes() - 1);
                 testingData.setClassIndex(testingData.numAttributes() - 1);
 
-                /* BISOGNA FARE PRIMA FUTURE SELECTION E POI SAMPLING --> DA FARE E DA CAMBIARE!!! */
+                /* BISOGNA FARE PRIMA FUTURE SELECTION E POI SAMPLING */
 
                 // ---- RUN SENZA SELECTION - SEMPLICE ----
                 runSimpleClassifier(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
