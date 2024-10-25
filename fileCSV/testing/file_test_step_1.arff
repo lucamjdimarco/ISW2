@@ -10,7 +10,7 @@
 @attribute TOTAL_LOC_REMOVED numeric
 @attribute MAX_LOC_REMOVED numeric
 @attribute AVG_LOC_TOUCHED numeric
-@attribute BUGGY {NO,YES}
+@attribute BUGGY {YES,NO}
 
 @data
 137,192,3,180,60,1,137,12,8,64,NO

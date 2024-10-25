@@ -3,9 +3,11 @@ package utils;
 import com.opencsv.CSVWriter;
 import model.FileJava;
 import model.Release;
+import model.Ticket;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -16,14 +18,33 @@ public class WriteCSV {
      * Per ogni step, viene creato un file CSV per il training (con tutte le release fino a quella corrente)
      * e un file per il test (con la release successiva).
      * @param releases Lista delle release da usare per generare i CSV.
-     * @param baseCsvFilePath Percorso base del file CSV (es. "walk_forward_step").
+     * @param baseCsvFilePathForTraining Percorso base del file CSV Training.
+     *
      */
-    public static void writeReleasesForWalkForward(List<Release> releases, String baseCsvFilePathForTraining, String baseCsvFilePathForTesting) {
+    public static void writeReleasesForWalkForward(List<Release> releases, List<Ticket> tickets, String baseCsvFilePathForTraining, String baseCsvFilePathForTesting, String repo) {
         // Itera per ogni step del walk forward
         for (int i = 1; i < releases.size(); i++) {
+
+            List<Release> releaseList = new ArrayList<>();
+            List<Ticket> ticketList = new ArrayList<>();
+            for (Release release : releases) {
+                if (release.getIndex() <= i) {
+                    releaseList.add(release);
+                }
+            }
+            for (Ticket ticket : tickets) {
+                if (ticket.getFixedVersion() < i) {
+                    ticketList.add(ticket);
+                }
+            }
+
+            CalculateBugginess.markBuggyFilesUsingAffectedVersions(ticketList, releaseList, repo);
+
             // File di training: contiene tutte le release fino alla i-esima
             String trainingCsvFilePath = baseCsvFilePathForTraining + "_train_step_" + i + ".csv";
             writeReleasesToCsv(releases.subList(0, i), trainingCsvFilePath);
+
+            CalculateBugginess.markBuggyFilesUsingAffectedVersions(tickets, releases.subList(i, i + 1), repo);
 
             // File di test: contiene la release successiva alla i-esima
             String testingCsvFilePath = baseCsvFilePathForTesting + "_test_step_" + i + ".csv";

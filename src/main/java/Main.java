@@ -11,6 +11,7 @@ import weka.WekaController;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.ArrayList;
 
 import static weka.WekaController.calculateWeka;
 import static weka.WekaController.convertCSVtoARFF;
@@ -56,11 +57,14 @@ public class Main {
 
             System.out.println(" ------- CALCOLO BUGGINESS ------- ");
 
-            CalculateBugginess.markBuggyFilesUsingAffectedVersions(tickets, releases, path);
+
+
+            //CalculateBugginess.markBuggyFilesUsingAffectedVersions(tickets, releases, path);
+
 
             System.out.println(" ------- SCRITTURA SU FILE ------- ");
 
-            WriteCSV.writeReleasesForWalkForward(releases, "fileCSV/training/file", "fileCSV/testing/file");
+            WriteCSV.writeReleasesForWalkForward(releases, tickets, "fileCSV/training/file", "fileCSV/testing/file", path);
 
             System.out.println(" ------- CONVERSIONE CSV TO ARFF ------- ");
 

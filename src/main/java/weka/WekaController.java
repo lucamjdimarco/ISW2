@@ -21,6 +21,9 @@ import weka.filters.supervised.instance.Resample;
 import weka.filters.supervised.instance.SpreadSubsample;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +68,17 @@ public class WekaController {
             saver.setFile(new File(arffFile));
             saver.setDestination(new File(arffFile));
             saver.writeBatch();
+
+            Path path = Paths.get(arffFile);
+            List<String> lines = Files.readAllLines(path);
+            for (String line : lines) {
+                if (line.contains("@attribute BUGGY")) {
+                    lines.set(lines.indexOf(line), "@attribute BUGGY {YES,NO}");
+                }
+            }
+            Files.write(path, lines, StandardCharsets.UTF_8);
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
