@@ -64,7 +64,7 @@ public class Main {
 
             System.out.println(" ------- SCRITTURA SU FILE ------- ");
 
-            WriteCSV.writeReleasesForWalkForward(releases, tickets, "fileCSV/training/file", "fileCSV/testing/file", path);
+            WriteCSV.writeReleasesForWalkForward(releases, tickets, "fileCSV/" + project + "/training/file", "fileCSV/" + project + "/testing/file", path);
 
             System.out.println(" ------- CONVERSIONE CSV TO ARFF ------- ");
 
@@ -72,8 +72,8 @@ public class Main {
                 //WekaController.convertCSVtoARFF();
             }*/
 
-            WekaController.convertAllCsvInFolder("fileCSV/training");
-            WekaController.convertAllCsvInFolder("fileCSV/testing");
+            WekaController.convertAllCsvInFolder("fileCSV/" + project + "/training");
+            WekaController.convertAllCsvInFolder("fileCSV/" + project + "/testing");
 
             calculateWeka(project, releases.size());
 

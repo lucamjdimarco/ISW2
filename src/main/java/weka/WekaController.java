@@ -1,6 +1,7 @@
 package weka;
 
 import model.MetricOfClassifier;
+import utils.WriteCSV;
 import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.lazy.IBk;
@@ -10,9 +11,12 @@ import weka.core.Instances;
 import weka.core.Utils;
 import weka.core.converters.ArffSaver;
 import weka.core.converters.CSVLoader;
+import weka.classifiers.CostMatrix;
+import weka.classifiers.meta.CostSensitiveClassifier;
 
 import weka.attributeSelection.BestFirst;
 import weka.attributeSelection.CfsSubsetEval;
+
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.AttributeSelection;
 
@@ -112,8 +116,8 @@ public class WekaController {
         try {
             for (int walkIteration = 1; walkIteration <= numReleases - 1; walkIteration++) {
 
-                String path1 = "fileCSV/training/";
-                String path2 = "fileCSV/testing/";
+                String path1 = "fileCSV/" + nameProj + "/training/";
+                String path2 = "fileCSV/" + nameProj + "/testing/";
                 String trainingFilePath = Paths.get(path1, "file_train_step_" + walkIteration + ".arff").toAbsolutePath().toString();
                 String testingFilePath = Paths.get(path2, "file_test_step_" + walkIteration + ".arff").toAbsolutePath().toString();
 
@@ -143,10 +147,17 @@ public class WekaController {
 
                 runWithFeatureSelectionAndOverSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
+                // ---- RUN CON FUTURE SELECTION E COST SENSITIVE ----
+                runFeatureSelectionWithCostSensitive(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
 
 
             }
+
+
+            WriteCSV.writeWekaResult(metricOfClassifierList);
+
+
             for(int j = 0; j < metricOfClassifierList.size(); j++) {
                 System.out.println(metricOfClassifierList.get(j).toString());
             }
@@ -203,7 +214,8 @@ public class WekaController {
             evalModel.evaluateModel(classifier, filteredTestingData);
 
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
-                    classifier.getClass().getSimpleName(), true, (isUnderSampling || isOverSampling), false);
+                    //classifier.getClass().getSimpleName(), true, (isUnderSampling || isOverSampling), false);
+                    classifier.getClass().getSimpleName(), true, false, false);
             setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
             metricOfClassifierList.add(classifierEval);
         }
@@ -242,6 +254,7 @@ public class WekaController {
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), true, true, false);
             setValueinTheClassifier(classifierEval, evalModel, underSampledTrainingData.numInstances(), testingData.numInstances());
+            classifierEval.setWhatSampling("UNDERSAMPLING");
             metricOfClassifierList.add(classifierEval);
         }
 
@@ -312,9 +325,61 @@ public class WekaController {
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), true, true, false);
             setValueinTheClassifier(classifierEval, evalModel, overSampledTrainingData.numInstances(), testingData.numInstances());
+            classifierEval.setWhatSampling("OVERSAMPLING");
             metricOfClassifierList.add(classifierEval);
         }
     }
+
+    //COST SENSITIVE CON FUTURE SELECTION
+    private static void runFeatureSelectionWithCostSensitive(String nameProj, int walkIteration, Instances trainingData, Instances testingData,
+                                                             List<MetricOfClassifier> metricOfClassifierList, Classifier[] classifiers) throws Exception {
+
+        System.out.println("RUNNING COST SENSITIVE CLASSIFIERS");
+
+        // ---- FEATURE SELECTION  ----
+        AttributeSelection attributeSelection = new AttributeSelection();
+        CfsSubsetEval eval = new CfsSubsetEval();
+        BestFirst search = new BestFirst();
+
+        attributeSelection.setEvaluator(eval);
+        attributeSelection.setSearch(search);
+        attributeSelection.setInputFormat(trainingData);
+
+        Instances filteredTrainingData = Filter.useFilter(trainingData, attributeSelection);
+        Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
+
+        filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
+        filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
+
+        //Imposto la matrice dei costi --> CFN = 10 * CFP
+        CostMatrix costMatrix = new CostMatrix(2);
+        costMatrix.setCell(0, 0, 0.0);  // Costo di TN
+        costMatrix.setCell(0, 1, 1.0);  // Costo di FP
+        costMatrix.setCell(1, 0, 10.0); // Costo di FN
+        costMatrix.setCell(1, 1, 0.0);  // Costo di TP
+
+        for (Classifier baseClassifier : classifiers) {
+            // Configura il classificatore cost-sensitive
+            CostSensitiveClassifier costSensitiveClassifier = new CostSensitiveClassifier();
+            costSensitiveClassifier.setClassifier(baseClassifier);
+            costSensitiveClassifier.setCostMatrix(costMatrix);
+            //costSensitiveClassifier.setMinimizeExpectedCost(true);
+
+            costSensitiveClassifier.buildClassifier(filteredTrainingData);
+
+            Evaluation evalModel = new Evaluation(filteredTestingData, costMatrix);
+            evalModel.evaluateModel(costSensitiveClassifier, filteredTestingData);
+
+            MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
+                    baseClassifier.getClass().getSimpleName(), true, false, true);
+
+            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
+
+
+            metricOfClassifierList.add(classifierEval);
+        }
+    }
+
 
 
     private static void setValueinTheClassifier(MetricOfClassifier classifier, Evaluation eval, int trainingSet, int testingSet) {

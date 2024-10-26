@@ -22,6 +22,9 @@ public class MetricOfClassifier {
 
     private double percentOfTheTraining;
 
+    private String whatSampling;
+
+
     public MetricOfClassifier(String nameProject, int iteration, String classifier, boolean feature_selection, boolean sampling, boolean cost_sensitive) {
         this.nameProject = nameProject;
         this.iteration = iteration;
@@ -39,6 +42,7 @@ public class MetricOfClassifier {
         this.fn = 0;
         this.percentOfTheTraining = 0;
         this.npofb = 0;
+        this.whatSampling = "NO";
 
     }
 
@@ -108,6 +112,11 @@ public class MetricOfClassifier {
         return npofb;
     }
 
+    public String getWhatSampling() {
+        return whatSampling;
+    }
+
+
     /* -- SETTER -- */
 
     public void setNameProject(String nameProject) {
@@ -170,6 +179,9 @@ public class MetricOfClassifier {
         this.percentOfTheTraining = percentOfTheTraining;
     }
 
+    public void setWhatSampling(String whatSampling) {
+        this.whatSampling = whatSampling;
+    }
     public void setNpofb(double npofb) {
         this.npofb = npofb;
     }

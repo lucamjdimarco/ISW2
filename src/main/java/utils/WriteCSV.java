@@ -2,6 +2,7 @@ package utils;
 
 import com.opencsv.CSVWriter;
 import model.FileJava;
+import model.MetricOfClassifier;
 import model.Release;
 import model.Ticket;
 
@@ -9,18 +10,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.text.DecimalFormat;
 
 
 public class WriteCSV {
 
-    /**
-     * Scrive i dati delle release in più CSV, uno per ogni step del walk forward.
-     * Per ogni step, viene creato un file CSV per il training (con tutte le release fino a quella corrente)
-     * e un file per il test (con la release successiva).
-     * @param releases Lista delle release da usare per generare i CSV.
-     * @param baseCsvFilePathForTraining Percorso base del file CSV Training.
-     *
-     */
+    private WriteCSV() {
+        throw new IllegalStateException("Utility class");
+    }
     public static void writeReleasesForWalkForward(List<Release> releases, List<Ticket> tickets, String baseCsvFilePathForTraining, String baseCsvFilePathForTesting, String repo) {
         // Itera per ogni step del walk forward
         for (int i = 1; i < releases.size(); i++) {
@@ -40,13 +37,11 @@ public class WriteCSV {
 
             CalculateBugginess.markBuggyFilesUsingAffectedVersions(ticketList, releaseList, repo);
 
-            // File di training: contiene tutte le release fino alla i-esima
             String trainingCsvFilePath = baseCsvFilePathForTraining + "_train_step_" + i + ".csv";
             writeReleasesToCsv(releases.subList(0, i), trainingCsvFilePath);
 
             CalculateBugginess.markBuggyFilesUsingAffectedVersions(tickets, releases.subList(i, i + 1), repo);
 
-            // File di test: contiene la release successiva alla i-esima
             String testingCsvFilePath = baseCsvFilePathForTesting + "_test_step_" + i + ".csv";
             writeReleasesToCsv(releases.subList(i, i + 1), testingCsvFilePath);
         }
@@ -86,6 +81,68 @@ public class WriteCSV {
 
                     writer.writeNext(fileData);
                 }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Scrive i risultati di WEKA in un singolo file CSV.
+     * @param metrics Lista delle metriche calcolate.
+     */
+    public static void writeWekaResult(List<MetricOfClassifier> metrics) {
+
+        DecimalFormat decimalFormat = new DecimalFormat("#.#####");
+
+        String feature_selection;
+        String cost_sensitive;
+
+
+        //try (CSVWriter writer = new CSVWriter(new FileWriter("fileCSV/wekaResult.csv"))) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter("fileCSV/" + metrics.get(0).getNameProject() + "/wekaResult.csv"))) {
+            // Intestazione del CSV
+            String[] header = { "PROJ", "CLASSIFIER", "ITERATION", "FEATURE_SELECTION", "SAMPLING", "COST_SENSITIVE", "PRECISION", "RECALL", "AUC", "KAPPA", "NPOFB", "TP", "FP", "TN", "FN", "%_OF_TRAINING" };
+            writer.writeNext(header);
+
+
+            // Itera sui risultati dei classificatori per scrivere i dati
+            for (MetricOfClassifier metric : metrics) {
+                if(metric.isFeature_selection()) {
+                    feature_selection = "BEST FIRST";
+                } else {
+                    feature_selection = "NO";
+                }
+
+
+                if(metric.isCost_sensitive()) {
+                    cost_sensitive = "SENSITIVE_LEARNING";
+                } else {
+                    cost_sensitive = "NO";
+                }
+
+
+                String[] metricData = {
+                        metric.getNameProject(),
+                        metric.getClassifier(),
+                        String.valueOf(metric.getIteration()),
+                        feature_selection,
+                        metric.getWhatSampling(),
+                        cost_sensitive,
+                        decimalFormat.format(metric.getPrecision()),
+                        decimalFormat.format(metric.getRecall()),
+                        decimalFormat.format(metric.getAuc()),
+                        decimalFormat.format(metric.getKappa()),
+                        decimalFormat.format(metric.getNpofb()),
+                        String.valueOf(metric.getTp()),
+                        String.valueOf(metric.getFp()),
+                        String.valueOf(metric.getTn()),
+                        String.valueOf(metric.getFn()),
+                        decimalFormat.format(metric.getPercentOfTheTraining())
+                };
+
+                writer.writeNext(metricData);
             }
 
         } catch (IOException e) {
