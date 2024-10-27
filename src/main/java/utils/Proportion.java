@@ -136,7 +136,7 @@ public class Proportion {
         } else {
             return (prop_calc.get(prop_calc.size() / 2));
         }*/
-        //restituisco al media delle proportion
+        //restituisco la media delle proportion
         return prop_calc.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
     }
 

@@ -2,6 +2,7 @@ package weka;
 
 import model.MetricOfClassifier;
 import utils.WriteCSV;
+import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.lazy.IBk;
@@ -32,6 +33,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+
+import static acume.AcumeController.retrieveNpofb;
 
 public class WekaController {
 
@@ -180,7 +183,7 @@ public class WekaController {
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), false, false, false);
 
-            setValueinTheClassifier(classifierEval, eval, trainingData.numInstances(), testingData.numInstances());
+            setValueinTheClassifier(classifierEval, eval, trainingData.numInstances(), testingData.numInstances(), testingData, (AbstractClassifier) classifier);
             metricOfClassifierList.add(classifierEval);
         }
     }
@@ -193,6 +196,9 @@ public class WekaController {
         AttributeSelection attributeSelection = new AttributeSelection();
         CfsSubsetEval eval = new CfsSubsetEval();
         BestFirst search = new BestFirst();
+
+        //BEST FIRST BI-DIREZIONALE (se non specifico è unidirezionale)
+        search.setOptions(Utils.splitOptions("-D 2"));
 
         attributeSelection.setEvaluator(eval);
         attributeSelection.setSearch(search);
@@ -212,7 +218,7 @@ public class WekaController {
 
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), true, false, false);
-            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
+            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances(), filteredTestingData, (AbstractClassifier) classifier);
             metricOfClassifierList.add(classifierEval);
         }
     }
@@ -224,6 +230,9 @@ public class WekaController {
         AttributeSelection attributeSelection = new AttributeSelection();
         CfsSubsetEval eval = new CfsSubsetEval();
         BestFirst search = new BestFirst();
+
+        //BEST FIRST BI-DIREZIONALE (se non specifico è unidirezionale)
+        search.setOptions(Utils.splitOptions("-D 2"));
 
         attributeSelection.setEvaluator(eval);
         attributeSelection.setSearch(search);
@@ -254,7 +263,7 @@ public class WekaController {
 
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), true, true, false);
-            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
+            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances(), filteredTestingData, (AbstractClassifier) classifier);
             classifierEval.setWhatSampling("UNDERSAMPLING");
             metricOfClassifierList.add(classifierEval);
         }
@@ -289,6 +298,9 @@ public class WekaController {
         CfsSubsetEval eval = new CfsSubsetEval();
         BestFirst search = new BestFirst();
 
+        //BEST FIRST BI-DIREZIONALE (se non specifico è unidirezionale)
+        search.setOptions(Utils.splitOptions("-D 2"));
+
         attributeSelection.setEvaluator(eval);
         attributeSelection.setSearch(search);
         attributeSelection.setInputFormat(trainingData);
@@ -314,14 +326,12 @@ public class WekaController {
             fc.setClassifier(classifier);
             fc.buildClassifier(filteredTrainingData);
 
-            //classifier.buildClassifier(filteredTrainingData);
             Evaluation evalModel = new Evaluation(filteredTestingData);
-            //evalModel.evaluateModel(classifier, filteredTestingData);
             evalModel.evaluateModel(fc, filteredTestingData);
 
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), true, true, false);
-            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
+            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances(), filteredTestingData, (AbstractClassifier) classifier);
             classifierEval.setWhatSampling("OVERSAMPLING");
             metricOfClassifierList.add(classifierEval);
         }
@@ -337,6 +347,9 @@ public class WekaController {
         CfsSubsetEval eval = new CfsSubsetEval();
         BestFirst search = new BestFirst();
 
+        //BEST FIRST BI-DIREZIONALE (se non specifico è unidirezionale)
+        search.setOptions(Utils.splitOptions("-D 2"));
+
         attributeSelection.setEvaluator(eval);
         attributeSelection.setSearch(search);
         attributeSelection.setInputFormat(trainingData);
@@ -345,14 +358,13 @@ public class WekaController {
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
 
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
-        //filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
         //Imposto la matrice dei costi --> CFN = 10 * CFP
         CostMatrix costMatrix = new CostMatrix(2);
-        costMatrix.setCell(0, 0, 0.0);  // Costo di TN
-        costMatrix.setCell(0, 1, 1.0);  // Costo di FP
-        costMatrix.setCell(1, 0, 10.0); // Costo di FN
-        costMatrix.setCell(1, 1, 0.0);  // Costo di TP
+        costMatrix.setCell(0, 0, 0.0);
+        costMatrix.setCell(0, 1, 10.0);
+        costMatrix.setCell(1, 0, 1.0);
+        costMatrix.setCell(1, 1, 0.0);
 
         for (Classifier baseClassifier : classifiers) {
             // Configura il classificatore cost-sensitive
@@ -369,7 +381,7 @@ public class WekaController {
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
                     baseClassifier.getClass().getSimpleName(), true, false, true);
 
-            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
+            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances(), filteredTestingData, (AbstractClassifier) baseClassifier);
 
 
             metricOfClassifierList.add(classifierEval);
@@ -378,7 +390,7 @@ public class WekaController {
 
 
 
-    private static void setValueinTheClassifier(MetricOfClassifier classifier, Evaluation eval, int trainingSet, int testingSet) {
+    private static void setValueinTheClassifier(MetricOfClassifier classifier, Evaluation eval, int trainingSet, int testingSet, Instances data, AbstractClassifier cls) {
 
         classifier.setPrecision(eval.precision(0));
         classifier.setRecall(eval.recall(0));
@@ -389,6 +401,8 @@ public class WekaController {
         classifier.setTn(eval.numTrueNegatives(0));
         classifier.setFn(eval.numFalseNegatives(0));
         classifier.setPercentOfTheTraining(100.0 * trainingSet / (trainingSet + testingSet));
+
+        classifier.setNpofb(retrieveNpofb(data, cls));
 
 
 
