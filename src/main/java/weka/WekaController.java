@@ -5,6 +5,7 @@ import utils.WriteCSV;
 import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.lazy.IBk;
+import weka.classifiers.meta.FilteredClassifier;
 import weka.classifiers.trees.RandomForest;
 import weka.classifiers.evaluation.Evaluation;
 import weka.core.Instances;
@@ -143,8 +144,6 @@ public class WekaController {
                 runWithFeatureSelectionAndUnderSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
                 // ---- RUN CON FUTURE SELECTION E OVER-SAMPLING ----
-                //runWithFeatureSelectionAndOverSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
-
                 runWithFeatureSelectionAndOverSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
                 // ---- RUN CON FUTURE SELECTION E COST SENSITIVE ----
@@ -154,13 +153,12 @@ public class WekaController {
 
             }
 
-
             WriteCSV.writeWekaResult(metricOfClassifierList);
 
-
-            for(int j = 0; j < metricOfClassifierList.size(); j++) {
+            /*for(int j = 0; j < metricOfClassifierList.size(); j++) {
                 System.out.println(metricOfClassifierList.get(j).toString());
-            }
+            }*/
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -205,7 +203,6 @@ public class WekaController {
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
 
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
-        //filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
 
         for (Classifier classifier : classifiers) {
@@ -214,7 +211,6 @@ public class WekaController {
             evalModel.evaluateModel(classifier, filteredTestingData);
 
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
-                    //classifier.getClass().getSimpleName(), true, (isUnderSampling || isOverSampling), false);
                     classifier.getClass().getSimpleName(), true, false, false);
             setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
             metricOfClassifierList.add(classifierEval);
@@ -235,31 +231,33 @@ public class WekaController {
 
         // applico il filtro al training set
         Instances filteredTrainingData = Filter.useFilter(trainingData, attributeSelection);
+        Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
+
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
 
         // ---- UNDER-SAMPLING ----
         SpreadSubsample underSampler = new SpreadSubsample();
-        underSampler.setInputFormat(trainingData);
+        underSampler.setInputFormat(filteredTrainingData);
         // -M 1.0 = undersampling 1:1 --> il filtro rimuoverà abbastanza istanze della classe maggioritaria per mantenere un rapporto di 1:1
-        // Bilanciamento classi di maggioranza
+        //Bilanciamento classi di maggioranza
         underSampler.setOptions(Utils.splitOptions("-M 1.0"));
-        Instances underSampledTrainingData = Filter.useFilter(trainingData, underSampler);
+
 
         // ---- RUN CON I DATI UNDER-SAMPLED ----
         for (Classifier classifier : classifiers) {
-            classifier.buildClassifier(underSampledTrainingData);
-            Evaluation evalModel = new Evaluation(testingData);
-            evalModel.evaluateModel(classifier, testingData);
+            FilteredClassifier fc = new FilteredClassifier();
+            fc.setFilter(underSampler);
+            fc.setClassifier(classifier);
+            fc.buildClassifier(filteredTrainingData);
+            Evaluation evalModel = new Evaluation(filteredTestingData);
+            evalModel.evaluateModel(fc, filteredTestingData);
 
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), true, true, false);
-            setValueinTheClassifier(classifierEval, evalModel, underSampledTrainingData.numInstances(), testingData.numInstances());
+            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
             classifierEval.setWhatSampling("UNDERSAMPLING");
             metricOfClassifierList.add(classifierEval);
         }
-
-        //System.out.println("Numero di istanze prima del campionamento: " + trainingData.numInstances());
-        //System.out.println("Numero di istanze dopo under-sampling: " + underSampledTrainingData.numInstances());
     }
 
     private static double calculateMajorityClassPercentage(Instances data) {
@@ -297,34 +295,33 @@ public class WekaController {
 
         // applico il filtro al training set
         Instances filteredTrainingData = Filter.useFilter(trainingData, attributeSelection);
+        Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
+
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
 
 
         // ---- OVER-SAMPLING ----
         Resample overSampler = new Resample();
-        overSampler.setInputFormat(trainingData);
-        double majorityClassPercentage = calculateMajorityClassPercentage(trainingData);
-        //double majorityClassPercentage = 65.0;
-        //double sampleSizePercent = 100.0 * (100.0 - majorityClassPercentage) / majorityClassPercentage;
+        overSampler.setInputFormat(filteredTrainingData);
+        double majorityClassPercentage = calculateMajorityClassPercentage(filteredTrainingData);
+        // -B 1.0 = oversampling 1:1 --> il filtro aggiungerà abbastanza istanze della classe minoritaria per mantenere un rapporto di 1:1
         double sampleSizePercent = majorityClassPercentage * 2;
         overSampler.setOptions(Utils.splitOptions("-B 1.0 -Z " + sampleSizePercent));
 
-        Instances overSampledTrainingData = Filter.useFilter(trainingData, overSampler);
-
-        System.out.println("Numero di istanze prima del campionamento: " + trainingData.numInstances());
-        System.out.println("Numero di istanze dopo over-sampling: " + overSampledTrainingData.numInstances());
-
-        // ---- RUN CON FUTURE SELECTION ----
-        //runWithFeatureSelection(nameProj, walkIteration, overSampledTrainingData, testingData, metricOfClassifierList, classifiers, false, true);
-
         for (Classifier classifier : classifiers) {
-            classifier.buildClassifier(overSampledTrainingData);
-            Evaluation evalModel = new Evaluation(testingData);
-            evalModel.evaluateModel(classifier, testingData);
+            FilteredClassifier fc = new FilteredClassifier();
+            fc.setFilter(overSampler);
+            fc.setClassifier(classifier);
+            fc.buildClassifier(filteredTrainingData);
+
+            //classifier.buildClassifier(filteredTrainingData);
+            Evaluation evalModel = new Evaluation(filteredTestingData);
+            //evalModel.evaluateModel(classifier, filteredTestingData);
+            evalModel.evaluateModel(fc, filteredTestingData);
 
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), true, true, false);
-            setValueinTheClassifier(classifierEval, evalModel, overSampledTrainingData.numInstances(), testingData.numInstances());
+            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
             classifierEval.setWhatSampling("OVERSAMPLING");
             metricOfClassifierList.add(classifierEval);
         }
@@ -334,7 +331,6 @@ public class WekaController {
     private static void runFeatureSelectionWithCostSensitive(String nameProj, int walkIteration, Instances trainingData, Instances testingData,
                                                              List<MetricOfClassifier> metricOfClassifierList, Classifier[] classifiers) throws Exception {
 
-        System.out.println("RUNNING COST SENSITIVE CLASSIFIERS");
 
         // ---- FEATURE SELECTION  ----
         AttributeSelection attributeSelection = new AttributeSelection();
@@ -349,7 +345,7 @@ public class WekaController {
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
 
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
-        filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
+        //filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
         //Imposto la matrice dei costi --> CFN = 10 * CFP
         CostMatrix costMatrix = new CostMatrix(2);
