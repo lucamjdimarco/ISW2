@@ -150,7 +150,7 @@ public class WriteCSV {
     public static void writeOnAcumeCSV(List<AcumeModel> acumeModelList) {
         try (CSVWriter writer = new CSVWriter(new FileWriter("ACUME/csv/acume.csv"))) {
             // Intestazione del CSV
-            String[] header = {"ID", "SIZE", "PROBABILITY", "VALUE"};
+            String[] header = {"ID", "Size", "Predicted", "Actual"};
             writer.writeNext(header);
 
             // Itera sui risultati dei classificatori per scrivere i dati

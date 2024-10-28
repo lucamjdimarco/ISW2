@@ -209,6 +209,7 @@ public class WekaController {
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
 
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
+        filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
 
         for (Classifier classifier : classifiers) {
@@ -243,6 +244,7 @@ public class WekaController {
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
 
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
+        filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
         // ---- UNDER-SAMPLING ----
         SpreadSubsample underSampler = new SpreadSubsample();
@@ -310,6 +312,7 @@ public class WekaController {
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
 
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
+        filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
 
         // ---- OVER-SAMPLING ----
@@ -358,6 +361,7 @@ public class WekaController {
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
 
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
+        filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
         //Imposto la matrice dei costi --> CFN = 10 * CFP
         CostMatrix costMatrix = new CostMatrix(2);
