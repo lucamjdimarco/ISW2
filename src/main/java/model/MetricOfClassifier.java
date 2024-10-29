@@ -6,9 +6,9 @@ public class MetricOfClassifier {
     private String classifier;
     //index dell'iterazione della walk forward
     private int iteration;
-    private boolean feature_selection;
+    private boolean featureselection;
     private boolean sampling;
-    private boolean cost_sensitive;
+    private boolean costsensitive;
     private double precision;
     private double recall;
     private double auc;
@@ -25,13 +25,13 @@ public class MetricOfClassifier {
     private String whatSampling;
 
 
-    public MetricOfClassifier(String nameProject, int iteration, String classifier, boolean feature_selection, boolean sampling, boolean cost_sensitive) {
+    public MetricOfClassifier(String nameProject, int iteration, String classifier, boolean featureselection, boolean sampling, boolean costsensitive) {
         this.nameProject = nameProject;
         this.iteration = iteration;
         this.classifier = classifier;
-        this.feature_selection = feature_selection;
+        this.featureselection = featureselection;
         this.sampling = sampling;
-        this.cost_sensitive = cost_sensitive;
+        this.costsensitive = costsensitive;
         this.precision = 0;
         this.recall = 0;
         this.auc = 0;
@@ -60,16 +60,16 @@ public class MetricOfClassifier {
         return iteration;
     }
 
-    public boolean isFeature_selection() {
-        return feature_selection;
+    public boolean isFeatureSelection() {
+        return featureselection;
     }
 
     public boolean isSampling() {
         return sampling;
     }
 
-    public boolean isCost_sensitive() {
-        return cost_sensitive;
+    public boolean isCostSensitive() {
+        return costsensitive;
     }
 
     public double getPrecision() {
@@ -131,16 +131,16 @@ public class MetricOfClassifier {
         this.iteration = iteration;
     }
 
-    public void setFeature_selection(boolean feature_selection) {
-        this.feature_selection = feature_selection;
+    public void setFeatureSelection(boolean featureselection) {
+        this.featureselection = featureselection;
     }
 
     public void setSampling(boolean sampling) {
         this.sampling = sampling;
     }
 
-    public void setCost_sensitive(boolean cost_sensitive) {
-        this.cost_sensitive = cost_sensitive;
+    public void setCostSensitive(boolean costsensitive) {
+        this.costsensitive = costsensitive;
     }
 
     public void setPrecision(double precision) {
@@ -192,9 +192,9 @@ public class MetricOfClassifier {
                 "nameProject='" + nameProject + '\'' +
                 ", classifier='" + classifier + '\'' +
                 ", iteration=" + iteration +
-                ", feature_selection=" + feature_selection +
+                ", feature_selection=" + featureselection +
                 ", sampling=" + sampling +
-                ", cost_sensitive=" + cost_sensitive +
+                ", cost_sensitive=" + costsensitive +
                 ", precision=" + precision +
                 ", recall=" + recall +
                 ", auc=" + auc +

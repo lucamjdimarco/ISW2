@@ -107,14 +107,14 @@ public class WriteCSV {
             writer.writeNext(header);
 
             for (MetricOfClassifier metric : metrics) {
-                if(metric.isFeature_selection()) {
+                if(metric.isFeatureSelection()) {
                     feature_selection = "BEST FIRST";
                 } else {
                     feature_selection = "NO";
                 }
 
 
-                if(metric.isCost_sensitive()) {
+                if(metric.isCostSensitive()) {
                     cost_sensitive = "SENSITIVE_LEARNING";
                 } else {
                     cost_sensitive = "NO";
