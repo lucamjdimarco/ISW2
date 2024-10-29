@@ -42,7 +42,7 @@ public class AcumeController {
                 double probability = getProbability(instance, classifier);
 
                 if (probability < 0) {
-                    logger.log(SEVERE, "Probabilità non valida per l'istanza " + i);
+                    logger.log(SEVERE, "Probabilità non valida per l'istanza {0}", i);
                     continue;
                 }
 
@@ -89,12 +89,12 @@ public class AcumeController {
             logger.log(SEVERE, "Errore durante la lettura del file CSV", e);
             e.printStackTrace();
         } catch (NumberFormatException e) {
-            logger.log(SEVERE, "Valore non valido in NPofB20: " + e.getMessage());
+            logger.log(SEVERE, "Valore non valido in NPofB20: ", e.getMessage());
         }
         return 0; // In caso di errore
     }
 
-    private static void startAcumeScript() {
+    private static void startAcumeScript() throws InterruptedException {
         try {
             String pythonScriptPath = Paths.get("ACUME/main.py").toAbsolutePath().toString();
             String[] cmd = {"python3", pythonScriptPath, "NPofB"};
@@ -112,11 +112,14 @@ public class AcumeController {
             if (exitCode == 0) {
                 logger.log(INFO, "Script Acume eseguito correttamente");
             } else {
-                logger.log(SEVERE, "Script Acume fallito con codice di uscita " + exitCode);
+                logger.log(SEVERE, "Script Acume fallito con codice di uscita {0}", exitCode);
             }
 
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw e;
         } catch (Exception e) {
-            logger.log(SEVERE, "Errore durante l'esecuzione dello script Acume", e);
+            logger.log(SEVERE, e.getMessage());
         }
     }
 
