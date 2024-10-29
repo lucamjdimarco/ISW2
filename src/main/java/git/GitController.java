@@ -35,6 +35,7 @@ import static java.util.logging.Level.SEVERE;
 public class GitController {
 
     private static final Logger logger = Logger.getLogger(GitController.class.getName());
+    private static final String javaExtension = ".java";
 
     private GitController() {
         throw new IllegalStateException("Utility class");
@@ -149,7 +150,7 @@ public class GitController {
     }
 
     private static boolean isJavaFile(String filePath) {
-        return filePath.endsWith(".java");
+        return filePath.endsWith(javaExtension);
     }
 
     private static void addFileIfNotExists(Release release, String filePath) {
@@ -167,9 +168,6 @@ public class GitController {
         }
         return false;
     }
-
-
-    /* ---------------------------------------------------------------- */
 
     /* ------ CALCOLO METRICHE ------ */
 
@@ -202,8 +200,6 @@ public class GitController {
     }
 
 
-    //calcolo in maniera cumulativa i LOC totali per ogni file Java per ogni release
-    //i LOC sono calcolati tra una release e l'altra
     private static void setFileLOCForCommit(Repository repo, RevCommit commit, List<FileJava> javaFiles) throws IOException {
         RevTree tree = commit.getTree();
 
@@ -214,34 +210,45 @@ public class GitController {
             while (treeWalk.next()) {
                 String filePath = treeWalk.getPathString();
 
-                // Controlla se è un file Java
-                if (filePath.endsWith(".java")) {
-                    ObjectId objectId = treeWalk.getObjectId(0);
-                    ObjectLoader loader = repo.open(objectId);
-
-                    // Legge il contenuto del file e conta le LOC
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(loader.openStream()))) {
-                        String line;
-                        int numLines = 0;
-                        while ((line = reader.readLine()) != null) {
-                            String trimmedLine = line.trim();
-                            if (!trimmedLine.isEmpty() && !(trimmedLine.startsWith("/*") ||
-                                    trimmedLine.startsWith("*") || trimmedLine.startsWith("//"))) {
-                                numLines++;
-                            }
-                        }
-
-                        // Aggiorna il numero di LOC nel corrispondente FileJava
-                        for (FileJava javaFile : javaFiles) {
-                            if (javaFile.getName().equals(filePath)) {
-                                javaFile.setLoc(numLines);  // Modifica diretta
-                            }
-                        }
-                    }
+                if (isJavaFile(filePath)) {
+                    int loc = countLOC(repo, treeWalk);
+                    updateFileLOC(javaFiles, filePath, loc);
                 }
             }
         }
     }
+
+    private static int countLOC(Repository repo, TreeWalk treeWalk) throws IOException {
+        ObjectId objectId = treeWalk.getObjectId(0);
+        ObjectLoader loader = repo.open(objectId);
+
+        int numLines = 0;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(loader.openStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (isCodeLine(line)) {
+                    numLines++;
+                }
+            }
+        }
+        return numLines;
+    }
+
+    private static boolean isCodeLine(String line) {
+        String trimmedLine = line.trim();
+        return !trimmedLine.isEmpty() && !trimmedLine.startsWith("/*") &&
+                !trimmedLine.startsWith("*") && !trimmedLine.startsWith("//");
+    }
+
+    private static void updateFileLOC(List<FileJava> javaFiles, String filePath, int loc) {
+        for (FileJava javaFile : javaFiles) {
+            if (javaFile.getName().equals(filePath)) {
+                javaFile.setLoc(loc);
+                break;
+            }
+        }
+    }
+
 
 
 
@@ -266,7 +273,7 @@ public class GitController {
                         for (DiffEntry diff : diffs) {
                             String filePath = diff.getNewPath();
 
-                            if (filePath.endsWith(".java")) {
+                            if (filePath.endsWith(javaExtension)) {
                                 fileRevisions.put(filePath, fileRevisions.getOrDefault(filePath, 0) + 1);
                             }
                         }
@@ -397,7 +404,7 @@ public class GitController {
 
             for (DiffEntry diff : diffs) {
                 String filePath = diff.getNewPath();
-                if (filePath.endsWith(".java")) {
+                if (filePath.endsWith(javaExtension)) {
                     FileJava javaFile = javaFiles.stream().filter(f -> f.getName().equals(filePath)).findFirst().orElse(null);
                     if (javaFile != null) {
                         int addedLines = 0;
@@ -468,7 +475,7 @@ public class GitController {
 
             for (DiffEntry diff : diffs) {
                 String filePath = diff.getNewPath();
-                if (filePath.endsWith(".java")) {
+                if (filePath.endsWith(javaExtension)) {
                     int addedLines = 0;
 
                     for (Edit edit : diffFormatter.toFileHeader(diff).toEditList()) {
@@ -499,7 +506,7 @@ public class GitController {
 
             for (DiffEntry diff : diffs) {
                 String filePath = diff.getNewPath();
-                if (filePath.endsWith(".java")) {
+                if (filePath.endsWith(javaExtension)) {
                     int addedLines = 0;
 
                     ObjectId objectId = diff.getNewId().toObjectId();
