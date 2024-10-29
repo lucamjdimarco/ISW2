@@ -35,7 +35,7 @@ import static java.util.logging.Level.SEVERE;
 public class GitController {
 
     private static final Logger logger = Logger.getLogger(GitController.class.getName());
-    private static final String javaExtension = ".java";
+    private static final String javaex = ".java";
 
     private GitController() {
         throw new IllegalStateException("Utility class");
@@ -150,7 +150,7 @@ public class GitController {
     }
 
     private static boolean isJavaFile(String filePath) {
-        return filePath.endsWith(javaExtension);
+        return filePath.endsWith(javaex);
     }
 
     private static void addFileIfNotExists(Release release, String filePath) {
@@ -273,7 +273,7 @@ public class GitController {
                         for (DiffEntry diff : diffs) {
                             String filePath = diff.getNewPath();
 
-                            if (filePath.endsWith(javaExtension)) {
+                            if (filePath.endsWith(javaex)) {
                                 fileRevisions.put(filePath, fileRevisions.getOrDefault(filePath, 0) + 1);
                             }
                         }
@@ -404,7 +404,7 @@ public class GitController {
 
             for (DiffEntry diff : diffs) {
                 String filePath = diff.getNewPath();
-                if (filePath.endsWith(javaExtension)) {
+                if (filePath.endsWith(javaex)) {
                     FileJava javaFile = javaFiles.stream().filter(f -> f.getName().equals(filePath)).findFirst().orElse(null);
                     if (javaFile != null) {
                         int addedLines = 0;
@@ -475,7 +475,7 @@ public class GitController {
 
             for (DiffEntry diff : diffs) {
                 String filePath = diff.getNewPath();
-                if (filePath.endsWith(javaExtension)) {
+                if (filePath.endsWith(javaex)) {
                     int addedLines = 0;
 
                     for (Edit edit : diffFormatter.toFileHeader(diff).toEditList()) {
@@ -506,7 +506,7 @@ public class GitController {
 
             for (DiffEntry diff : diffs) {
                 String filePath = diff.getNewPath();
-                if (filePath.endsWith(javaExtension)) {
+                if (filePath.endsWith(javaex)) {
                     int addedLines = 0;
 
                     ObjectId objectId = diff.getNewId().toObjectId();
