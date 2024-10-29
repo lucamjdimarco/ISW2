@@ -214,7 +214,8 @@ public class WekaController {
 
         for (Classifier classifier : classifiers) {
             classifier.buildClassifier(filteredTrainingData);
-            Evaluation evalModel = new Evaluation(filteredTestingData);
+            //Evaluation evalModel = new Evaluation(filteredTestingData);
+            Evaluation evalModel = new Evaluation(testingData);
             evalModel.evaluateModel(classifier, filteredTestingData);
 
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
@@ -260,7 +261,8 @@ public class WekaController {
             fc.setFilter(underSampler);
             fc.setClassifier(classifier);
             fc.buildClassifier(filteredTrainingData);
-            Evaluation evalModel = new Evaluation(filteredTestingData);
+            //Evaluation evalModel = new Evaluation(filteredTestingData);
+            Evaluation evalModel = new Evaluation(testingData);
             evalModel.evaluateModel(fc, filteredTestingData);
 
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
@@ -329,7 +331,8 @@ public class WekaController {
             fc.setClassifier(classifier);
             fc.buildClassifier(filteredTrainingData);
 
-            Evaluation evalModel = new Evaluation(filteredTestingData);
+            //Evaluation evalModel = new Evaluation(filteredTestingData);
+            Evaluation evalModel = new Evaluation(testingData);
             evalModel.evaluateModel(fc, filteredTestingData);
 
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,
@@ -379,7 +382,8 @@ public class WekaController {
 
             costSensitiveClassifier.buildClassifier(filteredTrainingData);
 
-            Evaluation evalModel = new Evaluation(filteredTestingData, costMatrix);
+            //Evaluation evalModel = new Evaluation(filteredTestingData, costMatrix);
+            Evaluation evalModel = new Evaluation(testingData, costMatrix);
             evalModel.evaluateModel(costSensitiveClassifier, filteredTestingData);
 
             MetricOfClassifier classifierEval = new MetricOfClassifier(nameProj, walkIteration,

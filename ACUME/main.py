@@ -16,6 +16,7 @@ processed_csv_file_data_normalized = []
 current_path = dirname(__file__)
 file_p = files_path
 mypath = join(current_path, file_p)
+print(mypath)
 onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
 t = time.time()
 data_rows = []
@@ -45,8 +46,8 @@ for file_num, filename in enumerate(onlyfiles):
         if row_index == 0:
             continue
         lst = row.split(delimiter)  # delimiter
-        #id, size, prediction, actual = lst[0], float(lst[1]) if lst[1] else 0, float(lst[2]), True if lst[
-        id, size, prediction, actual = lst[0], float(lst[1].replace('"', '').strip()) if lst[1] else 0, float(lst[2].replace('"', '').strip()), True if lst[
+        id, size, prediction, actual = lst[0], float(lst[1]) if lst[1] else 0, float(lst[2]), True if lst[
+        #id, size, prediction, actual = lst[0], float(lst[1].replace('"', '').strip()) if lst[1] else 0, float(lst[2].replace('"', '').strip()), True if lst[
                                                                                                           3].strip().upper() == 'YES' else False
         if size != 0:
 

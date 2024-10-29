@@ -3,6 +3,7 @@ package utils;
 import com.opencsv.CSVWriter;
 import model.*;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -148,7 +149,7 @@ public class WriteCSV {
     }
 
     public static void writeOnAcumeCSV(List<AcumeModel> acumeModelList) {
-        try (CSVWriter writer = new CSVWriter(new FileWriter("ACUME/csv/acume.csv"))) {
+        /*try (CSVWriter writer = new CSVWriter(new FileWriter("csv/acume.csv"))) {
             // Intestazione del CSV
             String[] header = {"ID", "Size", "Predicted", "Actual"};
             writer.writeNext(header);
@@ -167,8 +168,30 @@ public class WriteCSV {
 
         } catch (IOException e) {
             e.printStackTrace();
+        }*/
+
+        File subfolder = new File("csv");
+        /*if (!subfolder.mkdirs() && !subfolder.exists()) {
+            logger.log(Level.SEVERE, ERRORE_OUTPUT);
+        }*/
+
+        String outName = subfolder + File.separator + "acume.csv";
+        try (FileWriter fileWriter = new FileWriter(outName)) {
+            fileWriter.append("ID,Size,Prob,Actual\n");  // Header without quotes
+            for (AcumeModel acumeEntry : acumeModelList) {
+                // Append values directly without additional quotes
+                fileWriter.append(String.valueOf(acumeEntry.getId())).append(",")
+                        .append(String.valueOf(acumeEntry.getSize())).append(",")
+                        .append(String.valueOf(acumeEntry.getProbability())).append(",")
+                        .append(acumeEntry.getValue()).append("\n");
+            }
+        } catch (Exception e) {
+            //logger.log(Level.SEVERE, e.getMessage());
+            System.exit(0);
         }
     }
+
+
 
 
 }
