@@ -1,6 +1,5 @@
 package utils;
 
-import acume.AcumeController;
 import com.opencsv.CSVWriter;
 import model.*;
 
@@ -98,8 +97,8 @@ public class WriteCSV {
 
         DecimalFormat decimalFormat = new DecimalFormat("#.#####");
 
-        String feature_selection;
-        String cost_sensitive;
+        String featureselection;
+        String costsensitive;
 
 
         try (CSVWriter writer = new CSVWriter(new FileWriter("fileCSV/" + metrics.get(0).getNameProject() + "/wekaResult.csv"))) {
@@ -108,16 +107,16 @@ public class WriteCSV {
 
             for (MetricOfClassifier metric : metrics) {
                 if(metric.isFeatureSelection()) {
-                    feature_selection = "BEST FIRST";
+                    featureselection = "BEST FIRST";
                 } else {
-                    feature_selection = "NO";
+                    featureselection = "NO";
                 }
 
 
                 if(metric.isCostSensitive()) {
-                    cost_sensitive = "SENSITIVE_LEARNING";
+                    costsensitive = "SENSITIVE_LEARNING";
                 } else {
-                    cost_sensitive = "NO";
+                    costsensitive = "NO";
                 }
 
 
@@ -125,9 +124,9 @@ public class WriteCSV {
                         metric.getNameProject(),
                         metric.getClassifier(),
                         String.valueOf(metric.getIteration()),
-                        feature_selection,
+                        featureselection,
                         metric.getWhatSampling(),
-                        cost_sensitive,
+                        costsensitive,
                         decimalFormat.format(metric.getPrecision()),
                         decimalFormat.format(metric.getRecall()),
                         decimalFormat.format(metric.getAuc()),
