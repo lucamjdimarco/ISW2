@@ -6,6 +6,7 @@ import jira.JiraTicket;
 import model.*;
 
 import org.eclipse.jgit.revwalk.RevCommit;
+import utils.ConfigLoader;
 import utils.Proportion;
 import utils.WriteCSV;
 import weka.WekaController;
@@ -18,14 +19,13 @@ import static weka.WekaController.calculateWeka;
 
 public class Main {
 
+
+
     public static void main(String[] args) {
         try {
 
-            //String project = "BOOKKEEPER";
-            String project = "SYNCOPE";
-
-            //String path = "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper";
-            String path = "/Users/lucadimarco/Desktop/syncope/syncope";
+            String project = "BOOKKEEPER";
+            String path = ConfigLoader.getBookkeeperPath();
 
             List<Release> releases;
             List<Ticket> tickets;
