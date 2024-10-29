@@ -86,7 +86,7 @@ public class Proportion {
 
     public static void setInjectedVersion(Ticket ticket) {
 
-        if (ticket.getFixedVersion() == ticket.getOpeningVersion()) {
+        if (ticket.getFixedVersion().equals(ticket.getOpeningVersion())) {
             ticket.setInjectedVersion((int) Math.floor(ticket.getFixedVersion()-prop));
         }else {
             ticket.setInjectedVersion((int) Math.floor((ticket.getFixedVersion() - (ticket.getFixedVersion() - ticket.getOpeningVersion()) * prop)));
