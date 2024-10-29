@@ -38,29 +38,13 @@ import static acume.AcumeController.retrieveNpofb;
 
 public class WekaController {
 
+    private static final String ARFF = ".arff";
+
     private WekaController() {
         throw new IllegalStateException("Utility class");
     }
 
     public static void convertCSVtoARFF(String csvFile, String arffFile) {
-        /*try {
-            String pythonScriptPath = Paths.get("convert.py").toAbsolutePath().toString();
-
-            ProcessBuilder pb = new ProcessBuilder("python", pythonScriptPath);
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-            }
-
-            int exitCode = process.waitFor();
-            System.out.println("Exit Code: " + exitCode);
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }*/
 
         try {
             CSVLoader loader = new CSVLoader();
@@ -100,7 +84,7 @@ public class WekaController {
         for (File file : folder.listFiles()) {
             if (file.getName().endsWith(".csv")) {
                 String csvFile = file.getAbsolutePath();
-                String arffFile = csvFile.substring(0, csvFile.length() - 4) + ".arff";
+                String arffFile = csvFile.substring(0, csvFile.length() - 4) + ARFF;
                 convertCSVtoARFF(csvFile, arffFile);
             }
         }
@@ -121,8 +105,8 @@ public class WekaController {
 
                 String path1 = "fileCSV/" + nameProj + "/training/";
                 String path2 = "fileCSV/" + nameProj + "/testing/";
-                String trainingFilePath = Paths.get(path1, "file_train_step_" + walkIteration + ".arff").toAbsolutePath().toString();
-                String testingFilePath = Paths.get(path2, "file_test_step_" + walkIteration + ".arff").toAbsolutePath().toString();
+                String trainingFilePath = Paths.get(path1, "file_train_step_" + walkIteration + ARFF).toAbsolutePath().toString();
+                String testingFilePath = Paths.get(path2, "file_test_step_" + walkIteration + ARFF).toAbsolutePath().toString();
 
                 ConverterUtils.DataSource trainingSource = new ConverterUtils.DataSource(trainingFilePath);
                 ConverterUtils.DataSource testingSource = new ConverterUtils.DataSource(testingFilePath);
@@ -137,7 +121,7 @@ public class WekaController {
                 runSimpleClassifier(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
                 // ---- RUN CON FUTURE SELECTION (BEST FIRST) SENZA SAMPLING ----
-                runWithFeatureSelection(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers, false, false);
+                runWithFeatureSelection(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
                 // ---- RUN CON FUTURE SELECTION E UNDER-SAMPLING ----
                 runWithFeatureSelectionAndUnderSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
@@ -180,16 +164,9 @@ public class WekaController {
         }
     }
 
-    /*public static void printInstances(Instances instances) {
-        for (int i = 0; i < instances.numInstances(); i++) {
-            // Stampa l'istanza corrente
-            System.out.println(instances.instance(i).toString());
-        }
-    }*/
-
 
     private static void runWithFeatureSelection(String nameProj, int walkIteration, Instances trainingData, Instances testingData,
-                                                List<MetricOfClassifier> metricOfClassifierList, Classifier[] classifiers, boolean isUnderSampling, boolean isOverSampling) throws Exception {
+                                                List<MetricOfClassifier> metricOfClassifierList, Classifier[] classifiers) throws Exception {
 
         // ---- FUTURE SELECTION ----
         AttributeSelection attributeSelection = new AttributeSelection();
@@ -205,19 +182,12 @@ public class WekaController {
         Instances filteredTrainingData = Filter.useFilter(trainingData, attributeSelection);
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
 
-        /*System.out.println("Filtered Training Data:");
-        printInstances(filteredTrainingData);
-
-        System.out.println("Filtered Testing Data:");
-        printInstances(filteredTestingData);*/
-
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
         filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
 
         for (Classifier classifier : classifiers) {
             classifier.buildClassifier(filteredTrainingData);
-            //Evaluation evalModel = new Evaluation(filteredTestingData);
             Evaluation evalModel = new Evaluation(testingData);
             evalModel.evaluateModel(classifier, filteredTestingData);
 
@@ -263,7 +233,6 @@ public class WekaController {
             fc.setFilter(underSampler);
             fc.setClassifier(classifier);
             fc.buildClassifier(filteredTrainingData);
-            //Evaluation evalModel = new Evaluation(filteredTestingData);
             Evaluation evalModel = new Evaluation(testingData);
             evalModel.evaluateModel(fc, filteredTestingData);
 
@@ -290,9 +259,7 @@ public class WekaController {
                 majorityCount = count;
             }
         }
-        double majorityClassPercentage = (double) majorityCount / data.numInstances() * 100.0;
-
-        return majorityClassPercentage;
+        return (double) majorityCount / data.numInstances() * 100.0;
     }
 
 
@@ -331,7 +298,6 @@ public class WekaController {
             fc.setClassifier(classifier);
             fc.buildClassifier(filteredTrainingData);
 
-            //Evaluation evalModel = new Evaluation(filteredTestingData);
             Evaluation evalModel = new Evaluation(testingData);
             evalModel.evaluateModel(fc, filteredTestingData);
 
@@ -374,15 +340,12 @@ public class WekaController {
         costMatrix.setCell(1, 1, 0.0);
 
         for (Classifier baseClassifier : classifiers) {
-            // Configura il classificatore cost-sensitive
             CostSensitiveClassifier costSensitiveClassifier = new CostSensitiveClassifier();
             costSensitiveClassifier.setClassifier(baseClassifier);
             costSensitiveClassifier.setCostMatrix(costMatrix);
-            //costSensitiveClassifier.setMinimizeExpectedCost(true);
 
             costSensitiveClassifier.buildClassifier(filteredTrainingData);
 
-            //Evaluation evalModel = new Evaluation(filteredTestingData, costMatrix);
             Evaluation evalModel = new Evaluation(testingData, costMatrix);
             evalModel.evaluateModel(costSensitiveClassifier, filteredTestingData);
 
