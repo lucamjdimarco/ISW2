@@ -14,8 +14,8 @@ import static utils.JSON.readJsonFromUrl;
 
 public class JiraRelease {
 
-    public static HashMap<LocalDateTime, String> releaseNames;
-    public static HashMap<LocalDateTime, String> releaseID;
+    private static Map<LocalDateTime, String> releaseNames;
+    public static Map<LocalDateTime, String> releaseID;
     public static ArrayList<LocalDateTime> releases;
     public static Integer numVersions;
 
@@ -73,9 +73,6 @@ public class JiraRelease {
             index++;
 
         }
-
-        //calculateMetric(releaseList, "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper");
-        //calculateMetric(releaseList, "/Users/lucadimarco/Desktop/syncope/syncope");
 
         return releaseList;
     }
