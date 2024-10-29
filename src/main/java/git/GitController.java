@@ -443,7 +443,7 @@ public class GitController {
                     for (RevCommit commit : release.getCommits()) {
                         RevCommit parent = commit.getParentCount() > 0 ? commit.getParent(0) : null;
                         if (parent != null) {
-                            calculateAddedLOCAndMaxForCommit(repository, commit, parent, release.getFiles(), maxLocAddedPerFile, git);
+                            calculateAddedLOCAndMaxForCommit(repository, commit, parent, release.getFiles(), maxLocAddedPerFile);
                         } else {
                             calculateAddedLOCAndMaxForFirstCommit(repository, commit, release.getFiles(), maxLocAddedPerFile);
                         }
@@ -471,7 +471,7 @@ public class GitController {
 
     //calcolo LOC aggiunte e MAX LOX per commit
     private static void calculateAddedLOCAndMaxForCommit(Repository repository, RevCommit commit, RevCommit parent,
-                                                         List<FileJava> javaFiles, Map<String, Integer> maxLocAddedPerFile, Git git) throws IOException {
+                                                         List<FileJava> javaFiles, Map<String, Integer> maxLocAddedPerFile) throws IOException {
         try (DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
             diffFormatter.setRepository(repository);
             diffFormatter.setDetectRenames(true);
@@ -567,7 +567,7 @@ public class GitController {
                                     : diffFormatter.scan(null, commit);
 
                             diffs.stream()
-                                    .filter(diff -> diff.getNewPath().endsWith(".java"))
+                                    .filter(diff -> diff.getNewPath().endsWith(JAVAEXT))
                                     .forEach(diff -> fileAuthors.computeIfAbsent(diff.getNewPath(), k -> new HashSet<>()).add(author));
                         }
                     }
