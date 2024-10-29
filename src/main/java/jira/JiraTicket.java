@@ -19,12 +19,17 @@ import static utils.JSON.readJsonFromUrl;
 
 public class JiraTicket {
 
+    private static final String FIELDS = "fields";
+
     private JiraTicket() {
         throw new IllegalStateException("Utility class");
     }
 
     public static List<Ticket> getTickets(String project) throws IOException {
-        Integer j = 0, i = 0, total = 1;
+        Integer j = 0;
+        Integer i = 0;
+        Integer total = 1;
+
         Integer injectionVersion = null;
 
         List<Release> releaseList = getRelease("BOOKKEEPER");
@@ -49,9 +54,9 @@ public class JiraTicket {
                 JSONObject issue = issues.getJSONObject(i % 1000);
                 String key = issue.get("key").toString();
 
-                LocalDateTime openDate = LocalDateTime.parse(issue.getJSONObject("fields").getString("created").substring(0, 16));
-                LocalDateTime resolutionDate = LocalDateTime.parse(issue.getJSONObject("fields").getString("resolutiondate").substring(0, 16));
-                JSONArray affectedVersions = issue.getJSONObject("fields").getJSONArray("versions");
+                LocalDateTime openDate = LocalDateTime.parse(issue.getJSONObject(FIELDS).getString("created").substring(0, 16));
+                LocalDateTime resolutionDate = LocalDateTime.parse(issue.getJSONObject(FIELDS).getString("resolutiondate").substring(0, 16));
+                JSONArray affectedVersions = issue.getJSONObject(FIELDS).getJSONArray("versions");
 
                 injectionVersion = null;
 
