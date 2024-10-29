@@ -250,52 +250,57 @@ public class GitController {
     }
 
 
-
-
-
-    //calcolare il numero di revisioni per ogni file Java in ogni release
     public static void calculateNumberOfRevisionsPerFile(List<Release> releases, String repoPath) {
-        try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
-            try (Git git = new Git(repository)) {
-                for (Release release : releases) {
-                    Map<String, Integer> fileRevisions = new HashMap<>();
+        try (Repository repository = Git.open(new File(repoPath)).getRepository();
+             Git git = new Git(repository)) {
 
-                    for (RevCommit commit : release.getCommits()) {
-                        int parentCount = commit.getParentCount();
-
-                        DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE);
-                        diffFormatter.setRepository(repository);
-
-                        List<DiffEntry> diffs = parentCount > 0
-                                ? diffFormatter.scan(commit.getParent(0), commit)
-                                : diffFormatter.scan(null, commit);
-
-                        for (DiffEntry diff : diffs) {
-                            String filePath = diff.getNewPath();
-
-                            if (filePath.endsWith(JAVAEXT)) {
-                                fileRevisions.put(filePath, fileRevisions.getOrDefault(filePath, 0) + 1);
-                            }
-                        }
-                    }
-
-                    for (Map.Entry<String, Integer> entry : fileRevisions.entrySet()) {
-                        String fileName = entry.getKey();
-                        int numberOfRevisions = entry.getValue();
-
-                        FileJava javaFile = release.getJavaFileByName(fileName);
-                        if (javaFile == null) {
-                            javaFile = new FileJava(fileName);
-                            release.addFile(javaFile);
-                        }
-                        javaFile.setNr(numberOfRevisions);
-                    }
-                }
+            for (Release release : releases) {
+                Map<String, Integer> fileRevisions = countRevisionsForRelease(repository, release);
+                updateReleaseFilesWithRevisions(release, fileRevisions);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    private static Map<String, Integer> countRevisionsForRelease(Repository repository, Release release) throws IOException {
+        Map<String, Integer> fileRevisions = new HashMap<>();
+
+        for (RevCommit commit : release.getCommits()) {
+            List<DiffEntry> diffs = getCommitDiffs(repository, commit);
+            for (DiffEntry diff : diffs) {
+                String filePath = diff.getNewPath();
+                if (isJavaFile(filePath)) {
+                    fileRevisions.put(filePath, fileRevisions.getOrDefault(filePath, 0) + 1);
+                }
+            }
+        }
+        return fileRevisions;
+    }
+
+    private static List<DiffEntry> getCommitDiffs(Repository repository, RevCommit commit) throws IOException {
+        try (DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
+            diffFormatter.setRepository(repository);
+            return commit.getParentCount() > 0
+                    ? diffFormatter.scan(commit.getParent(0), commit)
+                    : diffFormatter.scan(null, commit);
+        }
+    }
+
+    private static void updateReleaseFilesWithRevisions(Release release, Map<String, Integer> fileRevisions) {
+        for (Map.Entry<String, Integer> entry : fileRevisions.entrySet()) {
+            String fileName = entry.getKey();
+            int numberOfRevisions = entry.getValue();
+
+            FileJava javaFile = release.getJavaFileByName(fileName);
+            if (javaFile == null) {
+                javaFile = new FileJava(fileName);
+                release.addFile(javaFile);
+            }
+            javaFile.setNr(numberOfRevisions);
+        }
+    }
+
 
     public static void calculateTouchedLOCAndRemovedLOCForReleaseFiles(List<Release> releases, String repoPath) {
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
