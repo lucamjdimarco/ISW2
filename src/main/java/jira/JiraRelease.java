@@ -3,18 +3,13 @@ package jira;
 
 import model.Release;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
-
-import static git.GitController.*;
 import static utils.JSON.readJsonFromUrl;
 
 public class JiraRelease {
@@ -93,7 +88,6 @@ public class JiraRelease {
             releases.add(dateTime);
         releaseNames.put(dateTime, name);
         releaseID.put(dateTime, id);
-        return;
     }
 
 

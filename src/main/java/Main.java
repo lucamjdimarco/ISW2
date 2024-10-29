@@ -4,17 +4,14 @@ import jira.JiraTicket;
 import model.*;
 
 import org.eclipse.jgit.revwalk.RevCommit;
-import utils.CalculateBugginess;
 import utils.Proportion;
 import utils.WriteCSV;
 import weka.WekaController;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.ArrayList;
 
 import static weka.WekaController.calculateWeka;
-import static weka.WekaController.convertCSVtoARFF;
 
 
 public class Main {
@@ -22,11 +19,11 @@ public class Main {
     public static void main(String[] args) {
         try {
 
-            String project = "BOOKKEEPER";
-            //String project = "SYNCOPE";
+            //String project = "BOOKKEEPER";
+            String project = "SYNCOPE";
 
-            String path = "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper";
-            //String path = "/Users/lucadimarco/Desktop/syncope/syncope";
+            //String path = "/Users/lucadimarco/Desktop/bookkeeper/bookkeeper";
+            String path = "/Users/lucadimarco/Desktop/syncope/syncope";
 
             List<Release> releases;
             List<Ticket> tickets;
@@ -37,8 +34,6 @@ public class Main {
 
             commits = GitController.retrieveCommits(path);
 
-            System.out.println(" ------- CALCOLO METRICHE ------- ");
-
             GitController.calculateMetric(releases, path);
 
             JiraTicket.commitsOfTheticket(commits, tickets);
@@ -48,36 +43,17 @@ public class Main {
             //PROPORTION
             Collections.reverse(tickets);
 
-            System.out.println(" ------- CALCOLO PROPORTION ------- ");
-
             Proportion.getProportion(tickets, project);
             for(Ticket ticket: tickets){
                 JiraTicket.calculateAV(ticket);
             }
 
-            System.out.println(" ------- CALCOLO BUGGINESS ------- ");
-
-
-
-            //CalculateBugginess.markBuggyFilesUsingAffectedVersions(tickets, releases, path);
-
-
-            System.out.println(" ------- SCRITTURA SU FILE ------- ");
-
             WriteCSV.writeReleasesForWalkForward(releases, tickets, "fileCSV/" + project + "/training/file", "fileCSV/" + project + "/testing/file", path);
-
-            System.out.println(" ------- CONVERSIONE CSV TO ARFF ------- ");
-
-            /*for(int i = 1; i < releases.size(); i++) {
-                //WekaController.convertCSVtoARFF();
-            }*/
 
             WekaController.convertAllCsvInFolder("fileCSV/" + project + "/training");
             WekaController.convertAllCsvInFolder("fileCSV/" + project + "/testing");
 
             calculateWeka(project, releases.size());
-
-            System.out.println(" ------- FINE ------- ");
 
         } catch (Exception e) {
             e.printStackTrace();

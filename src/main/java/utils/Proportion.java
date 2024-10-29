@@ -42,17 +42,13 @@ public class Proportion {
 
         for (Ticket ticket: tickets) {
             if (ticket.getInjectedVersion() != null ) {
-                //per rispettare la grandezza della finestra mobile
-                //rimuovo il ticket più vecchio e inserisco
                 if(ticketofProportion.size() > movWinSize){
                     ticketofProportion.remove(0);
                 }
                 ticketofProportion.add(ticket);
             } else {
-                //sono all'inizio e uso cold start
                 if (ticketofProportion.size() < movWinSize) {
                     if (prop==0) {
-                        //prop = coldStart();
                         prop = coldStart();
                     }
                 } else {
@@ -84,7 +80,6 @@ public class Proportion {
             if(t.getFixedVersion() != t.getOpeningVersion()) {
                 p += (double) (t.getFixedVersion() - t.getInjectedVersion()) / (t.getFixedVersion() - t.getOpeningVersion());
             }else{
-                //evito la divisione per zero
                 p+= (t.getFixedVersion() - t.getInjectedVersion());
             }
             k++;
@@ -98,14 +93,10 @@ public class Proportion {
     }
 
     public static double coldStart() throws IOException {
-        //utilizzo i ticket di progetti diversi per fare il cold start
         List<Ticket> tickets = new ArrayList<>();
         List<Double> prop_calc = new ArrayList<>();
         double p = 0;
         int counter;
-
-        //calcolo la proportion per ogni progetto e lo inserisco nella lista
-        //utilizzo la media delle proporzioni per fare il cold start
 
         for(String proj : projForColdStart) {
             counter = 0;
@@ -129,14 +120,6 @@ public class Proportion {
 
         }
 
-
-        /*prop_calc.sort(Comparator.naturalOrder());
-        if(prop_calc.size() % 2 == 0) {
-            return ((prop_calc.get(prop_calc.size() / 2) + prop_calc.get(prop_calc.size() / 2 - 1)) / 2);
-        } else {
-            return (prop_calc.get(prop_calc.size() / 2));
-        }*/
-        //restituisco la media delle proportion
         return prop_calc.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
     }
 

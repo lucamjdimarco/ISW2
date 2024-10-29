@@ -110,7 +110,6 @@ public class WekaController {
 
         List<MetricOfClassifier> metricOfClassifierList = new ArrayList<>();
 
-        //lista di classificatori da utilizzare
         Classifier[] classifiers = new Classifier[]{
                 new RandomForest(),
                 new NaiveBayes(),
@@ -125,7 +124,6 @@ public class WekaController {
                 String trainingFilePath = Paths.get(path1, "file_train_step_" + walkIteration + ".arff").toAbsolutePath().toString();
                 String testingFilePath = Paths.get(path2, "file_test_step_" + walkIteration + ".arff").toAbsolutePath().toString();
 
-                //carico i dati da ARFF
                 ConverterUtils.DataSource trainingSource = new ConverterUtils.DataSource(trainingFilePath);
                 ConverterUtils.DataSource testingSource = new ConverterUtils.DataSource(testingFilePath);
 
@@ -134,8 +132,6 @@ public class WekaController {
 
                 trainingData.setClassIndex(trainingData.numAttributes() - 1);
                 testingData.setClassIndex(testingData.numAttributes() - 1);
-
-                /* BISOGNA FARE PRIMA FUTURE SELECTION E POI SAMPLING */
 
                 // ---- RUN SENZA SELECTION - SEMPLICE ----
                 runSimpleClassifier(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
@@ -157,10 +153,6 @@ public class WekaController {
             }
 
             WriteCSV.writeWekaResult(metricOfClassifierList);
-
-            /*for(int j = 0; j < metricOfClassifierList.size(); j++) {
-                System.out.println(metricOfClassifierList.get(j).toString());
-            }*/
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -188,6 +180,13 @@ public class WekaController {
         }
     }
 
+    /*public static void printInstances(Instances instances) {
+        for (int i = 0; i < instances.numInstances(); i++) {
+            // Stampa l'istanza corrente
+            System.out.println(instances.instance(i).toString());
+        }
+    }*/
+
 
     private static void runWithFeatureSelection(String nameProj, int walkIteration, Instances trainingData, Instances testingData,
                                                 List<MetricOfClassifier> metricOfClassifierList, Classifier[] classifiers, boolean isUnderSampling, boolean isOverSampling) throws Exception {
@@ -197,16 +196,20 @@ public class WekaController {
         CfsSubsetEval eval = new CfsSubsetEval();
         BestFirst search = new BestFirst();
 
-        //BEST FIRST BI-DIREZIONALE (se non specifico è unidirezionale)
         search.setOptions(Utils.splitOptions("-D 2"));
 
         attributeSelection.setEvaluator(eval);
         attributeSelection.setSearch(search);
         attributeSelection.setInputFormat(trainingData);
 
-        //applico il filtro
         Instances filteredTrainingData = Filter.useFilter(trainingData, attributeSelection);
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
+
+        /*System.out.println("Filtered Training Data:");
+        printInstances(filteredTrainingData);
+
+        System.out.println("Filtered Testing Data:");
+        printInstances(filteredTestingData);*/
 
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
         filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
@@ -233,7 +236,6 @@ public class WekaController {
         CfsSubsetEval eval = new CfsSubsetEval();
         BestFirst search = new BestFirst();
 
-        //BEST FIRST BI-DIREZIONALE (se non specifico è unidirezionale)
         search.setOptions(Utils.splitOptions("-D 2"));
 
         attributeSelection.setEvaluator(eval);
@@ -302,14 +304,12 @@ public class WekaController {
         CfsSubsetEval eval = new CfsSubsetEval();
         BestFirst search = new BestFirst();
 
-        //BEST FIRST BI-DIREZIONALE (se non specifico è unidirezionale)
         search.setOptions(Utils.splitOptions("-D 2"));
 
         attributeSelection.setEvaluator(eval);
         attributeSelection.setSearch(search);
         attributeSelection.setInputFormat(trainingData);
 
-        // applico il filtro al training set
         Instances filteredTrainingData = Filter.useFilter(trainingData, attributeSelection);
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
 
@@ -411,8 +411,6 @@ public class WekaController {
         classifier.setPercentOfTheTraining(100.0 * trainingSet / (trainingSet + testingSet));
 
         classifier.setNpofb(retrieveNpofb(data, cls));
-
-
 
     }
 

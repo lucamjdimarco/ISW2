@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.opencsv.CSVReader;
@@ -39,28 +38,21 @@ public class AcumeController {
             for(int i = 0; i < data.numInstances(); i++) {
                 Instance instance = data.instance(i);
 
-                // Recupera i valori di Size e probabilità di essere buggy
                 double size = instance.value(0);
                 double probability = getProbability(instance, classifier);
 
-                // Gestione del caso in cui la probabilità non sia valida
                 if (probability < 0) {
                     logger.log(SEVERE, "Probabilità non valida per l'istanza " + i);
-                    continue; // Salta l'istanza in caso di errore
+                    continue;
                 }
 
-                // Valore effettivo: YES o NO
                 String actual = instance.stringValue(lastAttributesIndex);
 
-                // Crea e aggiungi l'istanza del modello
                 AcumeModel acumeModel = new AcumeModel(i, size, probability, actual);
                 acumeModelList.add(acumeModel);
             }
 
-            // Scrive i risultati sul file CSV
             writeOnAcumeCSV(acumeModelList);
-
-            // Avvia lo script Python per calcolare NPofB
             startAcumeScript();
 
             npofb20 = getNPofB20Value(Paths.get("EAM_NEAM_output.csv").toAbsolutePath().toString());
@@ -78,7 +70,6 @@ public class AcumeController {
             List<String[]> allRows = csvReader.readAll();
             String[] header = allRows.get(0);
 
-            //trova l'indice della colonna NPofB20
             int columnIndex = -1;
             for (int i = 0; i < header.length; i++) {
                 if ("Npofb20".equalsIgnoreCase(header[i].trim())) {
@@ -131,23 +122,12 @@ public class AcumeController {
 
     private static double getProbability(Instance instance, AbstractClassifier classifier) throws Exception {
         int isBugIndex = instance.classAttribute().indexOfValue("YES");
-
-        /*System.out.println("Class attribute index: " + instance.classAttribute().index());
-        System.out.println("YES index: " + instance.classAttribute().indexOfValue("YES"));
-        System.out.println("NO index: " + instance.classAttribute().indexOfValue("NO"));*/
-
-
-
-
+        double[] distribution = classifier.distributionForInstance(instance);
 
         if (isBugIndex == -1) {
             logger.log(SEVERE, "Valore 'YES' non trovato tra le classi disponibili");
             return -1; // Indica un errore
         }
-
-        double[] distribution = classifier.distributionForInstance(instance);
-
-        //System.out.println("Distribution: " + Arrays.toString(distribution));
 
         return distribution[isBugIndex];
     }

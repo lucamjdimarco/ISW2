@@ -16,9 +16,10 @@ import java.util.List;
 
 public class CalculateBugginess {
 
-    /* ---------------- CALCOLO ISBUGGY ----------------------- */
+    private CalculateBugginess() {
+        throw new IllegalStateException("Utility class");
+    }
 
-    //ottengo i file modificati per ogni commit
     public static List<String> getModifiedJavaFiles(RevCommit commit, String repoPath) throws IOException {
         List<String> javaFiles = new ArrayList<>();
         try (Git git = Git.open(new File(repoPath))) {

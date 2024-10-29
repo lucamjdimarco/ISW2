@@ -32,15 +32,11 @@ public class JiraTicket {
 
         HashMap<Integer, Release> releseIDMap = new HashMap<>();
 
-        //inserisco tutte le release nella mappa e uso come chiave il loro id,
-        //utile per recuperare le AV
         for(Release relese: releaseList) {
             releseIDMap.put(relese.getId(), relese);
         }
 
-        //Get JSON API for closed bugs w/ AV in the project
         do {
-            //Only gets a max of 1000 at a time, so must do this multiple times if bugs >1000
             j = i + 1000;
             String url = "https://issues.apache.org/jira/rest/api/2/search?jql=project=%22"
                     + project + "%22AND%22issueType%22=%22Bug%22AND(%22status%22=%22closed%22OR"
@@ -61,9 +57,7 @@ public class JiraTicket {
 
 
                 if (affectedVersions.length() > 0) {
-                    //se ho AV allora la IV sarà la prima versione
                     injectionVersion = affectedVersions.getJSONObject(0).getInt("id");
-                    //l'id non ci va bene, a noi serve l'indice (1, 2, ...)
                     if(releseIDMap.containsKey(injectionVersion)) {
                         injectionVersion = releseIDMap.get(injectionVersion).getIndex();
                     }
@@ -85,8 +79,6 @@ public class JiraTicket {
     }
 
     public static Integer getOV(Ticket ticket, List<Release> releases) {
-        //per ogni release, se la data dell'apertura del ticket è più piccola della data della release,
-        //allora è la OV che cerco
         for (Release release : releases) {
             if(ticket.getOpeningDate().compareTo(release.getReleaseDate()) < 0) {
                 return release.getIndex();
@@ -96,7 +88,6 @@ public class JiraTicket {
     }
 
     public static Integer getFV(Ticket ticket, List<Release> releases) {
-        //come prima, se la resolution date è minore della release date allora è la FV che voglio
         for (Release release : releases) {
             if(ticket.getResolutionDate().compareTo(release.getReleaseDate()) < 0) {
                 return release.getIndex();
@@ -108,7 +99,6 @@ public class JiraTicket {
     public static void commitsOfTheticket(List<RevCommit> commits, List<Ticket> tickets){
         for (Ticket ticket: tickets) {
             for (RevCommit commit: commits) {
-                //--> \\b indica “word boundary”, quindi l’ID del ticket deve essere una parola separata e non parte di un’altra parola
                 if (commit.getShortMessage().matches(".*\\b" + Pattern.quote(ticket.getId()) + "\\b.*")){
                     ticket.getCommits().add(commit);
                 }
@@ -142,7 +132,6 @@ public class JiraTicket {
 
     public static void calculateAV(Ticket ticket) {
         if (ticket.getInjectedVersion() != null && ticket.getFixedVersion() != null) {
-            //l'AV sarà il range tra IV e FV-1
             List<Integer> affectedVersions = new ArrayList<>();
             for (int version = ticket.getInjectedVersion(); version < ticket.getFixedVersion(); version++) {
                 affectedVersions.add(version);

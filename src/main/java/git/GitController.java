@@ -25,7 +25,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -47,9 +46,6 @@ public class GitController {
         calculateNumberOfAuthorsPerFile(releases, repoPath);
 
     }
-
-
-    /* ------ RECUPERO COMMIT E ASSOCIAZIONE COMMIT E FILE ------ */
 
     public static List<RevCommit> retrieveCommits(String path) {
         Iterable<RevCommit> commits;

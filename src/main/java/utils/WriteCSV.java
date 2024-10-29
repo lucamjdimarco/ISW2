@@ -1,5 +1,6 @@
 package utils;
 
+import acume.AcumeController;
 import com.opencsv.CSVWriter;
 import model.*;
 
@@ -9,9 +10,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.text.DecimalFormat;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class WriteCSV {
+
+    private static final Logger logger = Logger.getLogger(WriteCSV.class.getName());
 
     private WriteCSV() {
         throw new IllegalStateException("Utility class");
@@ -52,13 +57,12 @@ public class WriteCSV {
      */
     public static void writeReleasesToCsv(List<Release> releases, String csvFilePath) {
         try (CSVWriter writer = new CSVWriter(new FileWriter(csvFilePath))) {
-            // Intestazione del CSV
+
             String[] header = { "VERSION", "FILE_NAME", "LOC", "LOC_TOUCHED", "NUMBER_OF_REVISIONS",
                     "LOC_ADDED", "AVG_LOC_ADDED", "NUMBER_OF_AUTHORS", "MAX_LOC_ADDED",
                     "TOTAL_LOC_REMOVED", "MAX_LOC_REMOVED", "AVG_LOC_TOUCHED", "BUGGY" };
             writer.writeNext(header);
 
-            // Itera sulle release e sui file per scrivere i dati
             for (Release release : releases) {
                 for (FileJava file : release.getFiles()) {
                     String[] fileData = {
@@ -98,14 +102,10 @@ public class WriteCSV {
         String cost_sensitive;
 
 
-        //try (CSVWriter writer = new CSVWriter(new FileWriter("fileCSV/wekaResult.csv"))) {
         try (CSVWriter writer = new CSVWriter(new FileWriter("fileCSV/" + metrics.get(0).getNameProject() + "/wekaResult.csv"))) {
-            // Intestazione del CSV
             String[] header = { "PROJ", "CLASSIFIER", "ITERATION", "FEATURE_SELECTION", "SAMPLING", "COST_SENSITIVE", "PRECISION", "RECALL", "AUC", "KAPPA", "NPOFB", "TP", "FP", "TN", "FN", "%_OF_TRAINING" };
             writer.writeNext(header);
 
-
-            // Itera sui risultati dei classificatori per scrivere i dati
             for (MetricOfClassifier metric : metrics) {
                 if(metric.isFeature_selection()) {
                     feature_selection = "BEST FIRST";
@@ -149,31 +149,11 @@ public class WriteCSV {
     }
 
     public static void writeOnAcumeCSV(List<AcumeModel> acumeModelList) {
-        /*try (CSVWriter writer = new CSVWriter(new FileWriter("csv/acume.csv"))) {
-            // Intestazione del CSV
-            String[] header = {"ID", "Size", "Predicted", "Actual"};
-            writer.writeNext(header);
-
-            // Itera sui risultati dei classificatori per scrivere i dati
-            for (AcumeModel acumeModel : acumeModelList) {
-                String[] acumeData = {
-                        String.valueOf(acumeModel.getId()),
-                        String.valueOf(acumeModel.getSize()),
-                        String.valueOf(acumeModel.getProbability()),
-                        acumeModel.getValue()
-                };
-
-                writer.writeNext(acumeData);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
 
         File subfolder = new File("csv");
-        /*if (!subfolder.mkdirs() && !subfolder.exists()) {
-            logger.log(Level.SEVERE, ERRORE_OUTPUT);
-        }*/
+        if (!subfolder.mkdirs() && !subfolder.exists()) {
+            logger.log(Level.SEVERE, "Errore nella creazione della cartella di output");
+        }
 
         String outName = subfolder + File.separator + "acume.csv";
         try (FileWriter fileWriter = new FileWriter(outName)) {
@@ -186,8 +166,7 @@ public class WriteCSV {
                         .append(acumeEntry.getValue()).append("\n");
             }
         } catch (Exception e) {
-            //logger.log(Level.SEVERE, e.getMessage());
-            System.exit(0);
+            logger.log(Level.SEVERE, e.getMessage());
         }
     }
 
