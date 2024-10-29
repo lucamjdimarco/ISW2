@@ -59,7 +59,11 @@ public class AcumeController {
 
             return npofb20;
 
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.log(SEVERE, e.getMessage());
+            return 0;
+        }  catch (Exception e) {
             logger.log(SEVERE, e.getMessage());
             return 0;
         }
