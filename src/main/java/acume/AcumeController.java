@@ -42,7 +42,7 @@ public class AcumeController {
                 double probability = getProbability(instance, classifier);
 
                 if (probability < 0) {
-                    logger.log(SEVERE, "Probabilità non valida per l'istanza {0}", i);
+                    logger.log(SEVERE, "Probabilità non valida per l'istanza");
                     continue;
                 }
 
@@ -60,7 +60,7 @@ public class AcumeController {
             return npofb20;
 
         } catch (Exception e) {
-            logger.log(SEVERE, "Errore durante il calcolo di NPofB", e);
+            logger.log(SEVERE, e.getMessage());
             return 0;
         }
     }
@@ -86,10 +86,10 @@ public class AcumeController {
 
             return Double.parseDouble(valueStr);
         } catch (IOException | CsvException e) {
-            logger.log(SEVERE, "Errore durante la lettura del file CSV", e);
+            logger.log(SEVERE, e.getMessage());
             e.printStackTrace();
         } catch (NumberFormatException e) {
-            logger.log(SEVERE, "Valore non valido in NPofB20: ", e.getMessage());
+            logger.log(SEVERE, e.getMessage());
         }
         return 0; // In caso di errore
     }
@@ -112,7 +112,7 @@ public class AcumeController {
             if (exitCode == 0) {
                 logger.log(INFO, "Script Acume eseguito correttamente");
             } else {
-                logger.log(SEVERE, "Script Acume fallito con codice di uscita {0}", exitCode);
+                logger.log(SEVERE, "Script Acume fallito");
             }
 
         } catch (InterruptedException e) {
