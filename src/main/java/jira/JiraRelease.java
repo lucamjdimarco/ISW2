@@ -15,9 +15,9 @@ import static utils.JSON.readJsonFromUrl;
 public class JiraRelease {
 
     private static Map<LocalDateTime, String> releaseNames;
-    public static Map<LocalDateTime, String> releaseID;
-    public static ArrayList<LocalDateTime> releases;
-    public static Integer numVersions;
+    private static Map<LocalDateTime, String> releaseID;
+    private static List<LocalDateTime> releases;
+    private static Integer numVersions;
 
     private JiraRelease() {
         throw new IllegalStateException("Utility class");
@@ -54,7 +54,7 @@ public class JiraRelease {
             }
         });
         if (releases.size() < 6)
-            return null;
+            return List.of();
 
         //delete half of the releases
         int halfSize = releases.size() / 2;
