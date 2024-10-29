@@ -118,40 +118,56 @@ public class GitController {
     //toccati dai commit
     public static void associateFilesWithCommits(List<Release> releases, String repoPath) {
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
-
             for (Release release : releases) {
-                for (RevCommit releaseCommit : release.getCommits()) {
-                    //se il commit è incluso in quella release
-                    try (TreeWalk treeWalk = new TreeWalk(repository)) {
-                        treeWalk.addTree(releaseCommit.getTree());
-                        treeWalk.setRecursive(true);
+                associateFilesWithRelease(release, repository);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-                        while (treeWalk.next()) {
-                            String filePath = treeWalk.getPathString();
-                            if (filePath.endsWith(".java") && fileExistsInRepository(repository, releaseCommit, filePath)) {
-                                //controllo se è già presente nella lista dei file
-                                //non voglio duplicati
-                                boolean exists = false;
-                                for (FileJava existingFile : release.getFiles()) {
-                                    if (existingFile.getName().equals(filePath)) {
-                                        exists = true;
-                                        break; //esco se trovo un duplicato
-                                    }
-                                }
-                                //se non esiste, lo aggiungo creando un nuovo oggetto FileJava
-                                if (!exists) {
-                                    FileJava file = new FileJava(filePath);
-                                    release.addFile(file);
-                                }
-                            }
-                        }
-                    }
+    private static void associateFilesWithRelease(Release release, Repository repository) {
+        for (RevCommit releaseCommit : release.getCommits()) {
+            processCommitFiles(repository, release, releaseCommit);
+        }
+    }
+
+    private static void processCommitFiles(Repository repository, Release release, RevCommit releaseCommit) {
+        try (TreeWalk treeWalk = new TreeWalk(repository)) {
+            treeWalk.addTree(releaseCommit.getTree());
+            treeWalk.setRecursive(true);
+
+            while (treeWalk.next()) {
+                String filePath = treeWalk.getPathString();
+                if (isJavaFile(filePath) && fileExistsInRepository(repository, releaseCommit, filePath)) {
+                    addFileIfNotExists(release, filePath);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    private static boolean isJavaFile(String filePath) {
+        return filePath.endsWith(".java");
+    }
+
+    private static void addFileIfNotExists(Release release, String filePath) {
+        if (!fileExistsInRelease(release, filePath)) {
+            FileJava file = new FileJava(filePath);
+            release.addFile(file);
+        }
+    }
+
+    private static boolean fileExistsInRelease(Release release, String filePath) {
+        for (FileJava existingFile : release.getFiles()) {
+            if (existingFile.getName().equals(filePath)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /* ---------------------------------------------------------------- */
 
