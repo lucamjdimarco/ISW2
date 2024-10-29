@@ -1,6 +1,5 @@
 package utils;
 
-import acume.AcumeController;
 import jira.JiraTicket;
 import model.Ticket;
 
@@ -25,7 +24,7 @@ public class Proportion {
         throw new IllegalStateException("Utility class");
     }
 
-    public static void getProportion(List<Ticket> tickets, String project) throws IOException {
+    public static void getProportion(List<Ticket> tickets, String project) {
         List<String> projectsToAdd = initializeProjectsToAdd(project);
         projForColdStart.addAll(projectsToAdd);
 
@@ -100,7 +99,7 @@ public class Proportion {
         int k=0;
         double p = 0;
         for(Ticket t : ticketofProportion) {
-            if(t.getFixedVersion() != t.getOpeningVersion()) {
+            if(!t.getFixedVersion().equals(t.getOpeningVersion())) {
                 p += (double) (t.getFixedVersion() - t.getInjectedVersion()) / (t.getFixedVersion() - t.getOpeningVersion());
             }else{
                 p+= (t.getFixedVersion() - t.getInjectedVersion());
@@ -117,7 +116,7 @@ public class Proportion {
 
     public static double coldStart() throws IOException {
         List<Ticket> tickets = new ArrayList<>();
-        List<Double> prop_calc = new ArrayList<>();
+        List<Double> propcalc = new ArrayList<>();
         double p = 0;
         int counter;
 
@@ -127,7 +126,7 @@ public class Proportion {
             tickets = JiraTicket.getTickets(proj);
             for(Ticket ticket: tickets){
                 if(ticket.getInjectedVersion() != null && ticket.getOpeningVersion() != null && ticket.getFixedVersion() != null
-                        && ticket.getOpeningVersion() != ticket.getFixedVersion()){
+                        && !Objects.equals(ticket.getOpeningVersion(), ticket.getFixedVersion())){
                     if((double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) / (ticket.getFixedVersion() - ticket.getOpeningVersion()) > 1 ) {
                         p += (double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) / (ticket.getFixedVersion() - ticket.getOpeningVersion());
                     }else{
@@ -138,12 +137,12 @@ public class Proportion {
             }
             if(counter != 0) {
                 p = p / counter;
-                prop_calc.add(p);
+                propcalc.add(p);
             }
 
         }
 
-        return prop_calc.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        return propcalc.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
     }
 
 }
