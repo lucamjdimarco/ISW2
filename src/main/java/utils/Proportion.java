@@ -1,18 +1,24 @@
 package utils;
 
+import acume.AcumeController;
 import jira.JiraTicket;
 import model.Ticket;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
+
+import static java.util.logging.Level.SEVERE;
 
 public class Proportion {
+
+    private static final Logger logger = Logger.getLogger(Proportion.class.getName());
 
     private static List<String> projForColdStart = new ArrayList<>();
 
     private static int movWinSize;
     private static double prop;
+    private static int numTickets;
     private static final List<Ticket> ticketofProportion=new ArrayList<>();
 
     private Proportion() {
@@ -20,46 +26,63 @@ public class Proportion {
     }
 
     public static void getProportion(List<Ticket> tickets, String project) throws IOException {
+        List<String> projectsToAdd = initializeProjectsToAdd(project);
+        projForColdStart.addAll(projectsToAdd);
 
-        List<String> projectsToAdd = new ArrayList<>();
+        initializeParameters(tickets);
 
-        if(project.equals("BOOKKEEPER")) {
-            projectsToAdd = List.of("AVRO", "ZOOKEEPER");
-        } else if(project.equals("SYNCOPE")) {
-            projectsToAdd = List.of("PROTON", "OPENJPA");
+        for (Ticket ticket : tickets) {
+            processTicket(ticket);
+        }
+    }
+
+    private static List<String> initializeProjectsToAdd(String project) {
+        if (project.equals("BOOKKEEPER")) {
+            return List.of("AVRO", "ZOOKEEPER");
+        } else if (project.equals("SYNCOPE")) {
+            return List.of("PROTON", "OPENJPA");
         } else {
             throw new IllegalArgumentException("Project not found");
         }
+    }
 
-        //List<String> projectsToAdd = List.of("AVRO", "OPENJPA", "ZOOKEEPER", "STORM", "TAJO");
-        //List<String> projectsToAdd = List.of("AVRO");
-        projForColdStart.addAll(projectsToAdd);
+    private static void initializeParameters(List<Ticket> tickets) {
+        int numTickets = tickets.size();
+        movWinSize = Math.max(1, numTickets / 10); // Usa il 10% dei ticket, ma almeno 1 ticket
+        prop = 0;
+    }
 
-        int numTickets=tickets.size();
-        movWinSize=Math.max(1, numTickets / 10); //uso il 10% dei ticket, ma almeno 1 ticket
-        prop=0;
-
-
-        for (Ticket ticket: tickets) {
-            if (ticket.getInjectedVersion() != null ) {
-                if(ticketofProportion.size() > movWinSize){
-                    ticketofProportion.remove(0);
-                }
-                ticketofProportion.add(ticket);
-            } else {
-                if (ticketofProportion.size() < movWinSize) {
-                    if (prop==0) {
-                        prop = coldStart();
-                    }
-                } else {
-                    prop = movingWindow();
-
-                }
-
-                setInjectedVersion(ticket);
-            }
+    private static void processTicket(Ticket ticket) {
+        if (ticket.getInjectedVersion() != null) {
+            addToMovingWindow(ticket);
+        } else {
+            updateProportionIfNeeded();
+            setInjectedVersion(ticket);
         }
     }
+
+    private static void addToMovingWindow(Ticket ticket) {
+        if (ticketofProportion.size() > movWinSize) {
+            ticketofProportion.remove(0);
+        }
+        ticketofProportion.add(ticket);
+    }
+
+    private static void updateProportionIfNeeded() {
+        try {
+            if (ticketofProportion.size() < movWinSize) {
+                if (prop == 0) {
+                    prop = coldStart();
+                }
+            } else {
+                prop = movingWindow();
+            }
+        } catch (IOException e) {
+            logger.log(SEVERE, e.getMessage());
+        }
+
+    }
+
 
     public static void setInjectedVersion(Ticket ticket) {
 
