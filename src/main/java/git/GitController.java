@@ -28,8 +28,13 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.logging.Logger;
+
+import static java.util.logging.Level.SEVERE;
 
 public class GitController {
+
+    private static final Logger logger = Logger.getLogger(GitController.class.getName());
 
     private GitController() {
         throw new IllegalStateException("Utility class");
@@ -58,9 +63,9 @@ public class GitController {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NoHeadException e) {
-            throw new RuntimeException(e);
+            logger.log(SEVERE, "No HEAD found in repository");
         } catch (GitAPIException e) {
-            throw new RuntimeException(e);
+            logger.log(SEVERE, "Error while using Git API");
         }
         return commitList;
     }
