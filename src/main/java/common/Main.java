@@ -24,8 +24,8 @@ public class Main {
     public static void main(String[] args) {
         try {
 
-            String project = "BOOKKEEPER";
-            String path = ConfigLoader.getBookkeeperPath();
+            String project = "SYNCOPE";
+            String path = ConfigLoader.getSyncopePath();
 
             List<Release> releases;
             List<Ticket> tickets;
@@ -48,6 +48,10 @@ public class Main {
             Proportion.getProportion(tickets, project);
             for(Ticket ticket: tickets){
                 JiraTicket.calculateAV(ticket);
+            }
+
+            for(Ticket ticket: tickets){
+                System.out.println("Ticket " + ticket);
             }
 
             String subpath = "fileCSV/";

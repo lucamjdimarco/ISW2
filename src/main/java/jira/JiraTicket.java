@@ -32,7 +32,7 @@ public class JiraTicket {
 
         Integer injectionVersion = null;
 
-        List<Release> releaseList = getRelease("BOOKKEEPER");
+        List<Release> releaseList = getRelease(project);
         List<Ticket> tickets = new ArrayList<>();
 
         HashMap<Integer, Release> releseIDMap = new HashMap<>();
@@ -78,6 +78,8 @@ public class JiraTicket {
             ticket.setOpeningVersion(getOV(ticket, releaseList));
             ticket.setFixedVersion(getFV(ticket, releaseList));
         }
+
+
 
 
         return tickets;
