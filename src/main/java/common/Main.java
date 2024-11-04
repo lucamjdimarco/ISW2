@@ -50,13 +50,9 @@ public class Main {
                 JiraTicket.calculateAV(ticket);
             }
 
-            /*for(Ticket ticket: tickets){
-                System.out.println("Ticket " + ticket);
-            }*/
-
             String subpath = "fileCSV/";
 
-            WriteCSV.writeReleasesForWalkForward(project, releases, tickets, subpath + project + "/training/file", subpath + project + "/testing/file", path);
+            WriteCSV.writeReleasesForWalkForward(releases, tickets, subpath + project + "/training/file", subpath + project + "/testing/file", path);
 
             WekaController.convertAllCsvInFolder(subpath + project + "/training");
             WekaController.convertAllCsvInFolder(subpath + project + "/testing");

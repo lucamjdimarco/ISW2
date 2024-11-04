@@ -20,14 +20,10 @@ public class WriteCSV {
     private WriteCSV() {
         throw new IllegalStateException("Utility class");
     }
-    public static void writeReleasesForWalkForward(String project, List<Release> releases, List<Ticket> tickets, String baseCsvFilePathForTraining, String baseCsvFilePathForTesting, String repo) {
-
-        if(project.equals("SYNCOPE") && releases.size() >= 2) {
-            releases = releases.subList(0, releases.size() - 2);
-        }
+    public static void writeReleasesForWalkForward(List<Release> releases, List<Ticket> tickets, String baseCsvFilePathForTraining, String baseCsvFilePathForTesting, String repo) {
 
         // Itera per ogni step del walk forward
-        for (int i = 1; i < releases.size() - 1; i++) {
+        for (int i = 1; i < releases.size(); i++) {
 
             List<Release> releaseList = new ArrayList<>();
             List<Ticket> ticketList = new ArrayList<>();
