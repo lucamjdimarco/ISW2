@@ -133,7 +133,7 @@ public class AcumeController {
 
         if (isBugIndex == -1) {
             logger.log(SEVERE, "Valore 'YES' non trovato tra le classi disponibili");
-            return -1; // Indica un errore
+            return -1;
         }
 
         return distribution[isBugIndex];
