@@ -95,7 +95,7 @@ public class AcumeController {
         } catch (NumberFormatException e) {
             logger.log(SEVERE, e.getMessage());
         }
-        return 0; // In caso di errore
+        return 0;
     }
 
     private static void startAcumeScript() throws InterruptedException {

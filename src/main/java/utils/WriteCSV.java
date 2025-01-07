@@ -22,7 +22,6 @@ public class WriteCSV {
     }
     public static void writeReleasesForWalkForward(List<Release> releases, List<Ticket> tickets, String baseCsvFilePathForTraining, String baseCsvFilePathForTesting, String repo) {
 
-        // Itera per ogni step del walk forward
         for (int i = 1; i < releases.size(); i++) {
 
             List<Release> releaseList = new ArrayList<>();

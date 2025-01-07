@@ -389,7 +389,7 @@ public class GitController {
     }
 
 
-    /* QUI */
+
 
 
     //calcolo delle LOC toccate e rimosse per ogni commit
