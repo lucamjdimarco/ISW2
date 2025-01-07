@@ -19,7 +19,7 @@ import static weka.WekaController.calculateWeka;
 
 public class Main {
 
-    private final static String PATH = "fileCSV/";
+    private static final String PATH = "fileCSV/";
 
     public static void main(String[] args) {
         try {
