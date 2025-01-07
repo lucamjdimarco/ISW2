@@ -19,6 +19,8 @@ import static weka.WekaController.calculateWeka;
 
 public class Main {
 
+    private final static String PATH = "fileCSV/";
+
     public static void main(String[] args) {
         try {
             runProjectPipeline("BOOKKEEPER", ConfigLoader.getBookkeeperPath());
@@ -55,14 +57,17 @@ public class Main {
             JiraTicket.calculateAV(ticket);
         }
 
-        String subpath = "fileCSV/";
 
-        WriteCSV.writeReleasesForWalkForward(releases, tickets, subpath + project + "/training/file", subpath + project + "/testing/file", path);
+        WriteCSV.writeReleasesForWalkForward(releases, tickets, PATH + project + "/training/file", PATH + project + "/testing/file", path);
 
-        WekaController.convertAllCsvInFolder(subpath + project + "/training");
-        WekaController.convertAllCsvInFolder(subpath + project + "/testing");
+        WekaController.convertAllCsvInFolder(PATH + project + "/training");
+        WekaController.convertAllCsvInFolder(PATH + project + "/testing");
 
         calculateWeka(project, releases.size());
+
+        WriteCSV.cleanDirectory(PATH + project + "/training");
+        WriteCSV.cleanDirectory(PATH + project + "/testing");
+        WriteCSV.cleanDirectory("csv");
 
     }
 }

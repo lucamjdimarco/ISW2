@@ -170,6 +170,27 @@ public class WriteCSV {
         }
     }
 
+    public static void cleanDirectory(String directoryPath) {
+        File directory = new File(directoryPath);
+
+        if (directory.exists() && directory.isDirectory()) {
+            File[] files = directory.listFiles();
+
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isFile()) {
+                        boolean deleted = file.delete();
+                        if (!deleted) {
+                            System.err.println("Impossibile eliminare il file: " + file.getAbsolutePath());
+                        }
+                    }
+                }
+            }
+        } else {
+            System.err.println("La directory non esiste o non è una directory: " + directoryPath);
+        }
+    }
+
 
 
 
