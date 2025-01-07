@@ -11,6 +11,7 @@ import utils.Proportion;
 import utils.WriteCSV;
 import weka.WekaController;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class Main {
 
 
 
-    private static void runProjectPipeline(String project, String path) throws Exception {
+    private static void runProjectPipeline(String project, String path) throws IOException {
         List<Release> releases;
         List<Ticket> tickets;
         List<RevCommit> commits;
