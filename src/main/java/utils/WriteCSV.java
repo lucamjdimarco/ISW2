@@ -176,7 +176,7 @@ public class WriteCSV {
 
     private static void deleteFile(File file) {
         if (file.isFile() && !file.delete()) {
-            logger.log(Level.SEVERE,"Impossibile eliminare il file: " + file.getAbsolutePath());
+            logger.log(Level.SEVERE, String.format("Impossibile eliminare il file: %s", file.getAbsolutePath()));
         }
     }
 
@@ -185,7 +185,7 @@ public class WriteCSV {
         File directory = new File(directoryPath);
 
         if (!isValidDirectory(directory)) {
-            logger.log(Level.SEVERE,"La directory non esiste o non è una directory: " + directoryPath);
+            logger.log(Level.SEVERE, String.format("La directory non esiste o non è una directory: %s", directoryPath));
             return;
         }
 
