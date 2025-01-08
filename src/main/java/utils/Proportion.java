@@ -145,9 +145,10 @@ public class Proportion {
         propcalc.sort(Comparator.naturalOrder());
         if(propcalc.size() % 2 == 0) {
             return (propcalc.get(propcalc.size() / 2) + propcalc.get(propcalc.size() / 2 - 1)) / 2;
-        } else {
-            return propcalc.get(propcalc.size() / 2);
         }
+
+        return propcalc.get(propcalc.size() / 2);
+
 
     }
 
