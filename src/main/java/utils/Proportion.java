@@ -47,7 +47,7 @@ public class Proportion {
 
     private static void initializeParameters(List<Ticket> tickets) {
         int numTickets = tickets.size();
-        movWinSize = Math.max(1, numTickets / 10); // Usa il 10% dei ticket, ma almeno 1 ticket
+        movWinSize = Math.max(1, numTickets / 10);
         prop = 0;
     }
 
@@ -142,7 +142,13 @@ public class Proportion {
 
         }
 
-        return propcalc.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        propcalc.sort(Comparator.naturalOrder());
+        if(propcalc.size() % 2 == 0) {
+            return (propcalc.get(propcalc.size() / 2) + propcalc.get(propcalc.size() / 2 - 1)) / 2;
+        } else {
+            return propcalc.get(propcalc.size() / 2);
+        }
+
     }
 
 }

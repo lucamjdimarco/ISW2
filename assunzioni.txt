@@ -1,0 +1,10 @@
+Proportion:
+
+- Per l'operazione di cold start, per il progetto BookKeeper vengono presi in considerazione Avro e ZookKeeper; per il progetto Syncope vengono presi in considerazione Proton ed OpenJPA.
+
+Jira e Github:
+
+- Sono stati rimossi i ticket senza commit associati, tenendo conto che non portano informazioni utili alla computazione.
+- Sono state considerate vere a priori le informazioni contenute in JIRA.
+
+ 
