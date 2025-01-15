@@ -102,7 +102,7 @@ public class WriteCSV {
 
 
         try (CSVWriter writer = new CSVWriter(new FileWriter("fileCSV/" + metrics.get(0).getNameProject() + "/wekaResult.csv"))) {
-            String[] header = { "PROJ", "CLASSIFIER", "ITERATION", "FEATURE_SELECTION", "SAMPLING", "COST_SENSITIVE", "PRECISION", "RECALL", "AUC", "KAPPA", "NPOFB", "TP", "FP", "TN", "FN", "%_OF_TRAINING" };
+            String[] header = { "PROJ", "CLASSIFIER", "ITERATION", "FEATURE_SELECTION", "SAMPLING", "COST_SENSITIVE", "PRECISION", "RECALL", "AUC", "KAPPA", "NPOFB", "TP", "FP", "TN", "FN", "%_OF_TRAINING"};
             writer.writeNext(header);
 
             for (MetricOfClassifier metric : metrics) {
